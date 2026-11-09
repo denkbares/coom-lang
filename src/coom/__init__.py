@@ -10,6 +10,7 @@ from coom.configuration import Configuration
 from coom.diagnostics import Diagnostic, Severity
 from coom.model import Model
 from coom.parser import ParseResult, parse, parse_file
+from coom.writer import write
 
 __all__ = [
     "LANGUAGE_VERSION",
@@ -25,6 +26,7 @@ __all__ = [
     "compile_text",
     "parse",
     "parse_file",
+    "write",
 ]
 
 __version__ = version("coom-lang")
