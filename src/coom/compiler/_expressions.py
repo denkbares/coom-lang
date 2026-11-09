@@ -15,6 +15,7 @@ from coom.model import (
     AttributeStep,
     Binary,
     BinaryOp,
+    Boolean,
     Call,
     Compare,
     CompareOp,
@@ -59,6 +60,7 @@ class Scope:
 
     A frame either holds definitions, from define statements and the implicit this and root, or makes the options of
     an enumeration visible, which happens where a value is compared with or assigned to a value of that enumeration.
+    The truth values work like the options of an enumeration bool, so the quoted names "true" and "false" denote them.
     """
 
     parent: Scope | None = None
@@ -78,6 +80,8 @@ class Scope:
         return Scope(self, {name: formula})
 
     def expecting(self, type_: Type | None) -> Scope:
+        if isinstance(type_, Boolean):
+            return Scope(self, {"true": Constant(True), "false": Constant(False)})
         return Scope(self, enumeration=type_) if isinstance(type_, Enumeration) else self
 
     def lookup(self, name: str) -> Formula | None:
@@ -100,6 +104,10 @@ def value_type(formula: Formula) -> Type | None:
             return formula.path.type
         case Constant(value=Option() as option):
             return option.owner
+        case Constant(value=bool()):
+            return Boolean()
+        case Call(function=Function.MIN | Function.MAX, args=(first, *_)):
+            return value_type(first)
         case _:
             return None
 
