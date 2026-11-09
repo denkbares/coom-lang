@@ -37,6 +37,7 @@ from coom.model import (
     Step,
     Structure,
     Type,
+    value_type,
 )
 from coom.parser import token_span
 from coom.parser._antlr.COOMParser import COOMParser
@@ -95,21 +96,6 @@ class Scope:
                 return scope.definitions[name]
             scope = scope.parent
         return None
-
-
-def value_type(formula: Formula) -> Type | None:
-    """Returns the type of a formula as far as name resolution needs it, the enumeration of an option for example."""
-    match formula:
-        case PathAccess():
-            return formula.path.type
-        case Constant(value=Option() as option):
-            return option.owner
-        case Constant(value=bool()):
-            return Boolean()
-        case Call(function=Function.MIN | Function.MAX, args=(first, *_)):
-            return value_type(first)
-        case _:
-            return None
 
 
 class Expressions:

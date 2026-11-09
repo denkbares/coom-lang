@@ -47,6 +47,7 @@ from coom.model.formulas import (
     Not,
     Or,
     PathAccess,
+    value_type,
 )
 from coom.model.graph import Item, Model
 from coom.model.paths import AttributeStep, FeatureStep, Index, Path, Step
@@ -145,5 +146,6 @@ __all__ = [
     "parts",
     "referenced",
     "type_name",
+    "value_type",
     "walk",
 ]

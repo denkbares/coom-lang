@@ -7,7 +7,7 @@ from enum import StrEnum
 
 from coom.model._base import Span, span_field
 from coom.model.paths import Path
-from coom.model.types import ConstantValue
+from coom.model.types import Boolean, ConstantValue, Option, Type
 
 
 class BinaryOp(StrEnum):
@@ -94,6 +94,25 @@ class Call:
 
 
 type Formula = Constant | PathAccess | Negate | Binary | Call
+
+
+def value_type(formula: Formula) -> Type | None:
+    """Returns the type of the values of a formula where it is evident without type checking, otherwise None.
+
+    This is the type a path leads to, the enumeration of an option constant, the boolean type of a truth constant, and
+    for min and max the type of their first argument. Arithmetic, counts and other constants give None.
+    """
+    match formula:
+        case PathAccess():
+            return formula.path.type
+        case Constant(value=Option() as option):
+            return option.owner
+        case Constant(value=bool()):
+            return Boolean()
+        case Call(function=Function.MIN | Function.MAX, args=(first, *_)):
+            return value_type(first)
+        case _:
+            return None
 
 
 @dataclass(frozen=True, slots=True)

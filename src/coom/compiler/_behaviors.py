@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Any, TypedDict
 
 from coom.compiler._context import Abort, Compilation, children, name, need, unquote
-from coom.compiler._expressions import Expressions, Scope, value_type
+from coom.compiler._expressions import Expressions, Scope
 from coom.model import (
     AttributeStep,
     Cell,
@@ -34,6 +34,7 @@ from coom.model import (
     Span,
     Structure,
     Visibility,
+    value_type,
 )
 from coom.parser._antlr.COOMParser import COOMParser
 
