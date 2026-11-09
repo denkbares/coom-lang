@@ -1,0 +1,42 @@
+product {
+    CargoBike cargoBike
+}
+
+structure CargoBike {
+          num /kg totalWeight
+          num /kg wantedWeight
+          num /l  totalVolume
+          num /l  wantedVolume
+          num     countBags
+    0..99 Bag     bags
+}
+
+structure Bag {
+    Color color
+    Size  size
+}
+
+enumeration Color { Green; Blue; Red }
+
+enumeration Size {
+    attribute num maxWeight
+    attribute num volume
+
+    small   = ( 10 12 )
+    medium  = ( 15 16 )
+    large   = ( 25 20 )
+}
+
+behavior CargoBike {
+    require sum(bags.size.maxWeight) = totalWeight
+    require sum(bags.size.volume) = totalVolume
+
+    require totalWeight >= wantedWeight && totalWeight >= 0
+    require totalVolume >= wantedVolume && totalVolume >= 0
+
+}
+
+behavior CargoBike {
+    imply countBags = count(bags)
+    minimize countBags
+}

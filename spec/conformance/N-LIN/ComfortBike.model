@@ -1,0 +1,45 @@
+product {
+    ComfortBike comfortBike
+}
+
+structure ComfortBike {
+    FrontBag frontBag
+    RearBag  rearBag
+    Suspension suspension
+    num /kg riderWeight
+    num /kg totalWeight
+}
+
+enumeration FrontBag {
+    attribute num /kg maxWeight
+
+    small   = (  5 )
+    medium  = ( 10 )
+    large   = ( 15 )
+}
+
+enumeration RearBag {
+    attribute num /kg maxWeight
+
+    small   = ( 10 )
+    medium  = ( 15 )
+    large   = ( 25 )
+}
+
+enumeration Suspension {
+    attribute num /kg minWeight
+    attribute num /kg maxWeight
+
+    s1 = (   0  120 )
+    s2 = ( 120  135 )
+}
+
+behavior ComfortBike {
+    default riderWeight = 100
+    imply totalWeight = (riderWeight + frontBag.maxWeight + rearBag.maxWeight)
+}
+
+behavior ComfortBike {
+    require (totalWeight  > suspension.minWeight)
+    require (totalWeight <= suspension.maxWeight)
+}

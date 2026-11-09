@@ -1,0 +1,30 @@
+product {
+    SundayBike sundayBike
+}
+
+structure SundayBike {
+    num /mm reach
+    num /mm stack
+    num /mm seatTubeAngle
+    num /mm effectiveTopTubeLength
+    TopTubeBag topTubeBag
+}
+
+enumeration TopTubeBag {
+    attribute num /mm length
+
+    short   = ( 550 )
+    middle  = ( 600 )
+    long    = ( 650 )
+}
+
+behavior SundayBike {
+    default reach = 470
+    default stack = 600
+    default seatTubeAngle = 73
+    imply effectiveTopTubeLength = reach + (stack / tan(seatTubeAngle))
+}
+
+behavior SundayBike {
+    require (topTubeBag.length + 30) < effectiveTopTubeLength
+}

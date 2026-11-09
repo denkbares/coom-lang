@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+title: COOM, the Configuration Object Model language
+message: If you use COOM, please cite the language repository and the paper below.
+type: software
+authors:
+  - name: denkbares GmbH
+    website: https://www.denkbares.com
+repository-code: https://github.com/denkbares/coom-lang
+url: https://www.coom-lang.org
+license: Apache-2.0
+preferred-citation:
+  type: article
+  title: Towards Industrial-scale Product Configuration
+  authors:
+    - family-names: Baumeister
+      given-names: Joachim
+    - family-names: Herud
+      given-names: Konstantin
+    - family-names: Ostrowski
+      given-names: Max
+    - family-names: Reutelshoefer
+      given-names: Jochen
+    - family-names: Ruehling
+      given-names: Nicolas
+    - family-names: Schaub
+      given-names: Torsten
+    - family-names: Wanko
+      given-names: Philipp
+  journal: Theory and Practice of Logic Programming
+  year: 2026
+  doi: 10.1017/s1471068426100404

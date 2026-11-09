@@ -1,0 +1,27 @@
+product {
+    ShoppingBike shoppingBike
+}
+
+structure ShoppingBike {
+    2 Bag frontBag
+    3 Bag rearBag
+}
+
+structure Bag {
+    Color color
+    Size  size
+}
+
+enumeration Color { 
+    Green; Blue; Red 
+}
+
+enumeration Size {
+    small
+    medium
+    large
+}
+
+behavior ShoppingBike {
+    require frontBag[0].size = frontBag[1].size
+}

@@ -1,0 +1,43 @@
+product {
+    0..* Bag bags
+    num.## /€ 0-2000 price
+    num.* exact
+    num 0-* atLeastZero
+    num.## *-100 atMostHundred
+    string note
+    Größe größe
+    "static" quotedReserved
+    Color min
+}
+enumeration Größe { klein; groß }
+enumeration Color { Red; Blue }
+behavior {
+    define half = price / 2
+    explanation "Only the newest bag matters"
+    condition bags[last].size = small
+    require bags[0..last-1].size = small
+
+    require (price) condition (min)
+        (10)  (Red)
+        (20)  (-*-)
+
+    default (price)
+        (42)
+
+    combinations (min  bags[0].size)
+    allow        (Red  -*-)
+    forbid       (Blue small)
+
+    minimize price
+    hide note
+    readonly price
+    default/2 min = Red
+    imply exact = round(price, 2) + sum(bags.size.volume)
+}
+structure Bag { Size size }
+enumeration Size { attribute num volume; small = (1); large = (5) }
+test Smoke {
+    set min = Red
+    isAvailable bags[0].size = small
+    isFixed price
+}

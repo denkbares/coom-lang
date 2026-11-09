@@ -1,0 +1,37 @@
+product {
+    WeightyBike weightyBike
+}
+
+structure WeightyBike {
+    WheelSize wheelSize
+    Weights   weights
+}
+
+structure Weights {
+    num /gr wheelWeight
+    num /gr frameWeight
+    num /gr totalWeight
+}
+
+enumeration WheelSize {
+    // Attribute definitions
+    attribute num/inch size
+    attribute num/gr   weight
+
+    // Choice values of the type
+    W14 = ( 14 , 550  )
+    W16 = ( 16 , 550  )
+    W18 = ( 18 , 600  )
+    W20 = ( 20 , 650  )
+    W22 = ( 22 , 700  )
+    W24 = ( 24 , 800  )
+    W26 = ( 26 , 900  )
+    W28 = ( 28 , 1000 )
+}
+
+behavior Weights {
+    imply frameWeight = 10000
+    imply wheelWeight = 2 * root.weightyBike.wheelSize.weight
+
+    imply totalWeight = frameWeight + wheelWeight
+}

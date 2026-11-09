@@ -1,0 +1,24 @@
+product {
+    KidsBike kidsBike
+}
+
+structure KidsBike {
+    Color  color
+    bool   supportWheels
+    Wheel  wheelSize
+}
+
+enumeration Wheel { W14; W16; W18; W20 }
+
+enumeration Color { Red; Yellow }
+
+behavior KidsBike {
+    combinations (  supportWheels  wheelSize )
+    allow        (  true           (W14,W16) )
+    allow        (  false          (W18,W20) )
+}
+
+behavior KidsBike {
+    condition color = Yellow
+    require  wheelSize = W18 || wheelSize = W20
+}

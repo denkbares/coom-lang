@@ -1,0 +1,62 @@
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14"]
+build-backend = "uv_build"
+
+[project]
+name = "coom-lang"
+version = "0.0.1"
+description = "Reference implementation of the COOM product configuration language"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+authors = [{ name = "denkbares GmbH", email = "info@denkbares.com" }]
+keywords = ["coom", "product configuration", "knowledge base", "asp", "clingo"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Compilers",
+]
+dependencies = [
+    "antlr4-python3-runtime==4.13.2",
+]
+
+[project.optional-dependencies]
+asp = ["clingo>=5.7,<6"]
+
+[project.urls]
+Homepage = "https://www.coom-lang.org"
+Repository = "https://github.com/denkbares/coom-lang"
+Changelog = "https://github.com/denkbares/coom-lang/blob/main/CHANGELOG.md"
+
+[project.scripts]
+coom = "coom.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "mypy>=1.11",
+    "ruff>=0.6",
+    "antlr4-tools",
+]
+
+[tool.uv.build-backend]
+module-name = "coom"
+source-include = ["spec/**", "tests/**", "scripts/**", "CHANGELOG.md"]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["src/coom/_parser"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ["src/coom/_parser"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

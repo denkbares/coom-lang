@@ -1,0 +1,13 @@
+product {
+    WhiteBike whiteBike
+}
+
+structure WhiteBike {
+    Color color
+}
+
+enumeration Color { White; Black; Red }
+
+behavior WhiteBike {
+    default color = White
+}

@@ -1,0 +1,30 @@
+product {
+    SoftBrakesBike softBrakesBike
+}
+
+structure SoftBrakesBike {
+    Handle handle
+    bool   suspensionFork
+}
+
+structure Handle {
+    BrakeLever brakeLever
+    bool       extraSoftGrips
+}
+
+enumeration BrakeLever { Basic; Rugged }
+
+// (1) Product management defaults
+behavior SoftBrakesBike {
+    default suspensionFork = true
+    default handle.brakeLever = Basic
+
+    condition suspensionFork = true
+    default handle.extraSoftGrips = true
+}
+
+// (2) Constraints given be Engineering department
+behavior Handle {
+    // not both, extraSoftGrips and basic brakeLever can build on the Handle
+    require ! (extraSoftGrips = true && brakeLever = Basic)
+}

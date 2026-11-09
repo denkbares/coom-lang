@@ -1,0 +1,15 @@
+product {
+    PoorLightBike poorLightBike
+}
+
+structure PoorLightBike {
+    bool lights
+    Color color
+}
+
+enumeration Color { White; Black; Red }
+
+behavior PoorLightBike {
+    condition lights = false
+    default color = White
+}

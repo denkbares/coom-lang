@@ -1,0 +1,21 @@
+product {
+    CityBike cityBike
+}
+
+structure CityBike {
+    Wheel frontWheel
+    Wheel rearWheel
+}
+
+structure Wheel {
+    0..99 SpokeReflectors spokeReflectors
+}
+
+structure SpokeReflectors {
+    ReflectorType type
+    Color color
+}
+
+enumeration ReflectorType { oval; thin }
+
+enumeration Color { Green; Blue; Red }
