@@ -10,6 +10,9 @@ from typing import assert_never
 
 from coom.model._base import Span, span_field
 
+BOOLEAN_NAME = "bool"
+"""The predefined name of the boolean type, which no declared type can take."""
+
 ROOT_NAME = ":root"
 """Name of the structure that the product block declares."""
 
@@ -33,6 +36,13 @@ class Numerical:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Textual:
     """The type of text values."""
+
+    span: Span | None = span_field()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Boolean:
+    """The type of truth values, declared with the predefined type name bool."""
 
     span: Span | None = span_field()
 
@@ -159,7 +169,7 @@ class Option:
         return f"<Option {owner}.{self.name}>"
 
 
-type Type = Structure | Enumeration | Numerical | Textual
+type Type = Structure | Enumeration | Numerical | Textual | Boolean
 type ConstantValue = Decimal | bool | str | Option
 
 
@@ -179,6 +189,8 @@ def type_name(type_: Type) -> str:
             return text
         case Textual():
             return "string"
+        case Boolean():
+            return BOOLEAN_NAME
         case _:
             assert_never(type_)
 

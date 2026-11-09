@@ -64,8 +64,10 @@ from coom.model.testing import (
 )
 from coom.model.traversal import Node, children, parts, referenced, walk
 from coom.model.types import (
+    BOOLEAN_NAME,
     ROOT_NAME,
     Attribute,
+    Boolean,
     ConstantValue,
     Enumeration,
     Feature,
@@ -79,6 +81,7 @@ from coom.model.types import (
 )
 
 __all__ = [
+    "BOOLEAN_NAME",
     "ROOT_NAME",
     "And",
     "Attribute",
@@ -86,6 +89,7 @@ __all__ = [
     "Behavior",
     "Binary",
     "BinaryOp",
+    "Boolean",
     "Call",
     "Cell",
     "CellAtom",

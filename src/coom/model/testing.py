@@ -5,14 +5,15 @@ from __future__ import annotations
 from dataclasses import KW_ONLY, dataclass, field
 
 from coom.model._base import Span, span_field
-from coom.model.formulas import Formula
+from coom.model.formulas import Constant
 from coom.model.paths import Path
+from coom.model.types import Structure
 
 
 @dataclass(frozen=True, slots=True)
 class SetValue:
     path: Path
-    value: Formula | None = None
+    value: Constant | None = None
     _: KW_ONLY
     span: Span | None = span_field()
 
@@ -34,7 +35,7 @@ class ResetValue:
 @dataclass(frozen=True, slots=True)
 class IsFixed:
     path: Path
-    value: Formula | None = None
+    value: Constant | None = None
     _: KW_ONLY
     span: Span | None = span_field()
 
@@ -42,7 +43,7 @@ class IsFixed:
 @dataclass(frozen=True, slots=True)
 class IsShown:
     path: Path
-    value: Formula | None = None
+    value: Constant | None = None
     _: KW_ONLY
     span: Span | None = span_field()
 
@@ -57,7 +58,7 @@ class IsEmpty:
 @dataclass(frozen=True, slots=True)
 class IsAvailable:
     path: Path
-    value: Formula
+    value: Constant
     _: KW_ONLY
     span: Span | None = span_field()
 
@@ -65,7 +66,7 @@ class IsAvailable:
 @dataclass(frozen=True, slots=True)
 class IsBlocked:
     path: Path
-    value: Formula
+    value: Constant
     _: KW_ONLY
     span: Span | None = span_field()
 
@@ -75,8 +76,8 @@ type TestStep = SetValue | RemoveValue | ResetValue | IsFixed | IsShown | IsEmpt
 
 @dataclass(eq=False, slots=True, kw_only=True)
 class TestCase:
-    """A scripted session on the root structure."""
+    """A scripted session whose paths start at the origin structure, the root unless the test names another one."""
 
-    name: str | None = None
+    origin: Structure
     steps: tuple[TestStep, ...] = ()
     span: Span | None = field(default=None, repr=False)
