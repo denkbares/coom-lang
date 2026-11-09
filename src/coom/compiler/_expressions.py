@@ -336,10 +336,14 @@ class Expressions:
 
 
 def _respan(formula: Formula, span: Span) -> Formula:
-    """Returns an option constant found by name at the position of the name, a definition unchanged."""
-    if isinstance(formula, Constant) and isinstance(formula.value, Option):
-        return Constant(formula.value, span=span)
-    return formula
+    """Returns a constant or path found by name at the position of the name, other definitions unchanged."""
+    match formula:
+        case Constant():
+            return Constant(formula.value, span=span)
+        case PathAccess():
+            return PathAccess(formula.path, span=span)
+        case _:
+            return formula
 
 
 def _display(structure: Structure) -> str:
