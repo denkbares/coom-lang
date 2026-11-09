@@ -192,7 +192,7 @@ def test_conditions() -> None:
 
 
 def test_text_constants_and_negative_numbers() -> None:
-    model = compiled('behavior Bike {\n require note = "hello"\n imply weight = -3\n}')
+    model = compiled('behavior Bike {\n require note = "hello"\n imply exact = -3\n}')
     require, imply = model.behaviors
     assert condition(require).right == Constant("hello")
     assert isinstance(imply, Imply) and imply.value == Constant(Decimal(-3))

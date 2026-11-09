@@ -1,13 +1,14 @@
 """Compiles parse trees into a model and reports the errors it finds with their source positions.
 
-The compiler resolves names and builds the model graph. Typing and the other static checks of a complete model are
-not its concern. It continues after errors, leaving out the statements that contain them, so tools still get a model.
+The compiler resolves names and builds the model graph, then runs the static checks of coom.check on it. It continues
+after errors, leaving out the statements that contain them, so tools still get a model.
 """
 
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+from coom.check import check
 from coom.compiler._behaviors import compile_behaviors
 from coom.compiler._context import Compilation
 from coom.compiler._declarations import assign_attribute_values, declare_fields, declare_types
@@ -26,14 +27,14 @@ _PHASES = (declare_types, declare_fields, assign_attribute_values, compile_behav
 class CompileResult:
     model: Model
     diagnostics: tuple[Diagnostic, ...]
-    """The syntax errors of all sources followed by the errors of compilation."""
+    """The syntax errors of all sources, then the errors of compilation, then those of the static checks."""
 
     @property
     def ok(self) -> bool:
         return not any(diagnostic.severity is Severity.ERROR for diagnostic in self.diagnostics)
 
 
-def compile(*sources: ParseResult) -> CompileResult:
+def compile(*sources: ParseResult, checks: bool = True) -> CompileResult:
     """Compiles the parse results of one or more sources that together form one model."""
     compilation = Compilation()
     for phase in _PHASES:
@@ -48,7 +49,8 @@ def compile(*sources: ParseResult) -> CompileResult:
         tests=tuple(compilation.tests),
     )
     syntax = tuple(diagnostic for source in sources for diagnostic in source.diagnostics)
-    return CompileResult(model, syntax + tuple(compilation.diagnostics))
+    checked = check(model) if checks else ()
+    return CompileResult(model, (*syntax, *compilation.diagnostics, *checked))
 
 
 def compile_text(text: str, *, source: str | None = None) -> CompileResult:
