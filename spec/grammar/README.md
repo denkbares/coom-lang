@@ -51,7 +51,7 @@ protected boolean newlineBefore() {
 Java: `antlr4 -package <pkg> -visitor -no-listener COOM.g4`.
 
 Python: the predicate must read `self.newlineBefore()` and `not self.newlineBefore()`. `scripts/build_grammar.py` at
-the repository root performs that substitution and writes `src/coom/_parser`.
+the repository root performs that substitution and writes `src/coom/parser/_antlr`.
 
 ## Checking
 

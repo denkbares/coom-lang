@@ -48,7 +48,7 @@ source-include = ["spec/**", "tests/**", "scripts/**", "CHANGELOG.md"]
 
 [tool.ruff]
 line-length = 120
-extend-exclude = ["src/coom/_parser"]
+extend-exclude = ["src/coom/parser/_antlr"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
@@ -60,11 +60,15 @@ extend-immutable-calls = ["coom.model._base.span_field"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-exclude = ["src/coom/_parser"]
+exclude = ["src/coom/parser/_antlr"]
 
 [[tool.mypy.overrides]]
-module = ["clingo", "clingo.*"]
+module = ["clingo", "clingo.*", "antlr4", "antlr4.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["coom.parser._antlr.*"]
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

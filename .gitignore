@@ -11,7 +11,7 @@ build/
 .coverage
 htmlcov/
 
-# ANTLR tool output outside src/coom/_parser
+# ANTLR tool output outside src/coom/parser/_antlr
 *.interp
 *.tokens
 .antlr/
