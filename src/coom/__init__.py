@@ -5,9 +5,20 @@ Importing this package must not import clingo. The ASP solver lives in coom.asp 
 
 from importlib.metadata import version
 
+from coom.diagnostics import Diagnostic, Severity
 from coom.model import Model
+from coom.parser import ParseResult, parse, parse_file
 
-__all__ = ["LANGUAGE_VERSION", "Model", "__version__"]
+__all__ = [
+    "LANGUAGE_VERSION",
+    "Diagnostic",
+    "Model",
+    "ParseResult",
+    "Severity",
+    "__version__",
+    "parse",
+    "parse_file",
+]
 
 __version__ = version("coom-lang")
 
