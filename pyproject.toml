@@ -53,10 +53,18 @@ extend-exclude = ["src/coom/_parser"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
+[tool.ruff.lint.flake8-bugbear]
+# Creates a fresh dataclass field, so the call is safe as a default.
+extend-immutable-calls = ["coom.model._base.span_field"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
 exclude = ["src/coom/_parser"]
+
+[[tool.mypy.overrides]]
+module = ["clingo", "clingo.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
