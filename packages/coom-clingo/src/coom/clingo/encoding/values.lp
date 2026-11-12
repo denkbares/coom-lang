@@ -6,6 +6,7 @@
 %   attribute(E,O,A,V)     the value of attribute A of option O, n("1.5") for numbers and t("...") for texts
 
 #defined option/3.
+#defined attribute/4.
 
 1 { value(X,o(E,O)) : option(E,O,_) } 1 :- exists(X), kind(X,enum(E)).
 1 { value(X,b(true)); value(X,b(false)) } 1 :- exists(X), kind(X,bool).

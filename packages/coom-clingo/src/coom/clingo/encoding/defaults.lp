@@ -9,8 +9,7 @@
 #defined default/2.
 #defined defaults/0.
 
-applicable(B,O) :- default(B,_), fires(B,O).
-{ applied(B,O) } :- applicable(B,O), defaults.
+{ applied(B,O) } :- default(B,_), fires(B,O), defaults.
 #heuristic applied(B,O) : default(B,L). [L, true]
 
 % A default is applied only together with its value.

@@ -21,7 +21,6 @@
 #defined path_attribute/3.
 #defined path_range/1.
 #defined target/1.
-#defined attribute/4.
 
 at(X,O) :- origin(X,S), instance(O,S), exists(O).
 

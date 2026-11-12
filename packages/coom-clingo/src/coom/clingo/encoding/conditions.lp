@@ -1,14 +1,13 @@
 % Three valued conditions.
 %
-% may_be(X,O,R) states that condition X at instance O may take the outcome R, one of true, false and indefinite. A
-% decided condition has one outcome, an open one both true and false. Connectives combine outcomes pointwise with the
-% strong Kleene tables. Requirements use may_be, guards use sat and unsat below.
+% An atomic condition takes its outcome truth(C,O,R) once decided, R being true, false or indefinite, and is
+% open(C,O) while it waits for a value. An indefinite condition is neither true nor false in any completion.
 %   discrete_compare(C,Op,L,R)  comparison of discrete values (options, truth values, instances), decided here
 %   leaf(C)                     comparison or definedness test over numbers or texts, decided by the propagator
 %   is_defined(X,P)             a bare path read as a condition
 %   negation(X,A), and(X) with and(X,Y), or(X) with or(X,Y), constant(X,b(true)) and constant(X,b(false))
 %
-% An atomic condition takes its outcome truth(C,O,R) once decided and is open(C,O) while it waits for a value.
+% Requirements ask whether a condition may be true, guards whether it is satisfied. Both are derived below.
 
 #defined discrete_compare/4.
 #defined leaf/1.
@@ -21,9 +20,6 @@
 #defined falsy/1.
 
 :- truth(C,O,R), truth(C,O,S), R < S.
-may_be(C,O,R) :- truth(C,O,R).
-may_be(C,O,true) :- open(C,O).
-may_be(C,O,false) :- open(C,O).
 
 % Discrete comparisons. A range side is compared universally, a missing scalar side leaves the comparison open.
 side(C,O,l,W) :- discrete_compare(C,_,L,_), at(C,O), path_value(L,O,W).
@@ -35,36 +31,22 @@ scalar(C,r) :- discrete_compare(C,_,_,R), not path_range(R).
 present(C,O,D) :- side(C,O,D,_).
 open(C,O) :- discrete_compare(C,_,_,_), at(C,O), scalar(C,D), not present(C,O,D).
 open(C,O) :- discrete_compare(C,_,_,_), at(C,O), not scalar(C,l), not scalar(C,r).
-
 pair(C,O,V,W) :- side(C,O,l,V), side(C,O,r,W), not open(C,O).
-comparable(C,O,o(E,A),o(E,B)) :- pair(C,O,o(E,A),o(E,B)).
-comparable(C,O,b(A),b(B)) :- pair(C,O,b(A),b(B)).
-comparable(C,O,V,W) :- pair(C,O,V,W), instance(V,_), instance(W,_).
 
-equal(C,O,V,W,true) :- comparable(C,O,V,W), V = W.
-equal(C,O,V,W,false) :- comparable(C,O,V,W), V != W.
-equal(C,O,V,W,indefinite) :- pair(C,O,V,W), not comparable(C,O,V,W).
-result(C,O,V,W,R) :- discrete_compare(C,eq,_,_), equal(C,O,V,W,R).
-result(C,O,V,W,false) :- discrete_compare(C,ne,_,_), equal(C,O,V,W,true).
-result(C,O,V,W,true) :- discrete_compare(C,ne,_,_), equal(C,O,V,W,false).
-result(C,O,V,W,indefinite) :- discrete_compare(C,ne,_,_), equal(C,O,V,W,indefinite).
+% Two values are equal (0), ordered (-1 or 1) or merely unequal. Only options of one enumeration have an order, that
+% of their positions. A model that compiles orders nothing else, so an order of unordered values is false here.
+position(E,o(E,A),X) :- option(E,A,X).
+sign(C,O,V,W,0) :- pair(C,O,V,W), V = W.
+sign(C,O,V,W,-1) :- pair(C,O,V,W), position(E,V,X), position(E,W,Y), X < Y.
+sign(C,O,V,W,1) :- pair(C,O,V,W), position(E,V,X), position(E,W,Y), X > Y.
+sign(C,O,V,W,unequal) :- pair(C,O,V,W), V != W, not sign(C,O,V,W,-1), not sign(C,O,V,W,1).
+holds(eq,0). holds(le,0). holds(ge,0).
+holds(ne,-1). holds(lt,-1). holds(le,-1).
+holds(ne,1). holds(gt,1). holds(ge,1).
+holds(ne,unequal).
 
-% Options of one enumeration are ordered by their position, other values have no order.
-order(C,O,o(E,A),o(E,B),X-Y) :- pair(C,O,o(E,A),o(E,B)), option(E,A,X), option(E,B,Y).
-ordered(C,O,V,W) :- order(C,O,V,W,_).
-result(C,O,V,W,indefinite) :- discrete_compare(C,Op,_,_), Op != eq, Op != ne, pair(C,O,V,W), not ordered(C,O,V,W).
-result(C,O,V,W,true) :- discrete_compare(C,lt,_,_), order(C,O,V,W,D), D < 0.
-result(C,O,V,W,false) :- discrete_compare(C,lt,_,_), order(C,O,V,W,D), D >= 0.
-result(C,O,V,W,true) :- discrete_compare(C,le,_,_), order(C,O,V,W,D), D <= 0.
-result(C,O,V,W,false) :- discrete_compare(C,le,_,_), order(C,O,V,W,D), D > 0.
-result(C,O,V,W,true) :- discrete_compare(C,gt,_,_), order(C,O,V,W,D), D > 0.
-result(C,O,V,W,false) :- discrete_compare(C,gt,_,_), order(C,O,V,W,D), D <= 0.
-result(C,O,V,W,true) :- discrete_compare(C,ge,_,_), order(C,O,V,W,D), D >= 0.
-result(C,O,V,W,false) :- discrete_compare(C,ge,_,_), order(C,O,V,W,D), D < 0.
-
-truth(C,O,false) :- result(C,O,_,_,false).
-truth(C,O,indefinite) :- result(C,O,_,_,indefinite), not truth(C,O,false).
-truth(C,O,true) :- discrete_compare(C,_,_,_), at(C,O), not open(C,O), not truth(C,O,false), not truth(C,O,indefinite).
+truth(C,O,false) :- discrete_compare(C,Op,_,_), sign(C,O,_,_,S), not holds(Op,S).
+truth(C,O,true) :- discrete_compare(C,_,_,_), at(C,O), not open(C,O), not truth(C,O,false).
 
 % Numeric and text leaves. Their outcome is a free choice, which the propagator fixes to the outcome of the
 % evaluation. True and false need the operands to be ready, which requires their definedness, so a value cannot
@@ -87,23 +69,19 @@ truth(X,O,false) :- is_defined(X,_), at(X,O), not truth(X,O,true), not open(X,O)
 truth(X,O,true) :- constant(X,b(true)), at(X,O).
 truth(X,O,false) :- constant(X,b(false)), at(X,O).
 
-% Connectives. The Kleene tables need to know whether an operand may take an outcome other than false or true.
+% Whether a condition may be true or may be false. A decided condition may be what it is, an open one both, and an
+% indefinite one neither. Connectives combine these with the strong Kleene tables, where an indefinite operand never
+% makes a connective true or false.
+may_be(C,O,true) :- truth(C,O,true).
+may_be(C,O,false) :- truth(C,O,false).
+may_be(C,O,true) :- open(C,O).
+may_be(C,O,false) :- open(C,O).
 may_be(X,O,true) :- negation(X,A), may_be(A,O,false).
 may_be(X,O,false) :- negation(X,A), may_be(A,O,true).
-may_be(X,O,indefinite) :- negation(X,A), may_be(A,O,indefinite).
-
-may_be_other_than(Y,O,false) :- may_be(Y,O,true).
-may_be_other_than(Y,O,false) :- may_be(Y,O,indefinite).
-may_be_other_than(Y,O,true) :- may_be(Y,O,false).
-may_be_other_than(Y,O,true) :- may_be(Y,O,indefinite).
-
 may_be(X,O,true) :- and(X), at(X,O), may_be(Y,O,true) : and(X,Y).
 may_be(X,O,false) :- and(X,Y), may_be(Y,O,false).
-may_be(X,O,indefinite) :- and(X,Y), may_be(Y,O,indefinite), may_be_other_than(Z,O,false) : and(X,Z).
-
 may_be(X,O,true) :- or(X,Y), may_be(Y,O,true).
 may_be(X,O,false) :- or(X), at(X,O), may_be(Y,O,false) : or(X,Y).
-may_be(X,O,indefinite) :- or(X,Y), may_be(Y,O,indefinite), may_be_other_than(Z,O,true) : or(X,Z).
 
 % Satisfied and unsatisfied, derived bottom up from the decided atomic conditions. A connective is satisfied exactly
 % when its outcomes are {true}, but derived this way a guard holds only through operands that are themselves decided,
