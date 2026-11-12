@@ -1,0 +1,53 @@
+# Publishes all packages of the workspace to PyPI when a tag like v0.1.0 is pushed. Uploads use trusted publishing,
+# so PyPI needs this repository, this workflow file and the environment pypi registered for every package.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - name: Check that every package has the version of the tag
+        run: |
+          uv run --no-project python - "${GITHUB_REF_NAME#v}" <<'PYTHON'
+          import sys, tomllib, pathlib
+          expected = sys.argv[1]
+          versions = {
+              path.parent.name: tomllib.loads(path.read_text())["project"]["version"]
+              for path in pathlib.Path("packages").glob("*/pyproject.toml")
+          }
+          wrong = {name: version for name, version in versions.items() if version != expected}
+          if wrong:
+              sys.exit(f"tag {expected} does not match {wrong}")
+          PYTHON
+      - run: uv build --all-packages --out-dir dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      # uploads with trusted publishing and attaches attestations of where each file was built
+      - uses: pypa/gh-action-pypi-publish@release/v1
