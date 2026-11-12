@@ -1,0 +1,36 @@
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14"]
+build-backend = "uv_build"
+
+[project]
+name = "coom-lang"
+version = "0.0.1"
+description = "Parser, compiler and writer of the COOM product configuration language"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "denkbares GmbH", email = "info@denkbares.com" }]
+keywords = ["coom", "product configuration", "dsl", "parser", "compiler"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "coom-core==0.0.1",
+    "antlr4-python3-runtime==4.13.2",
+]
+
+[project.urls]
+Homepage = "https://www.coom-lang.org"
+Repository = "https://github.com/denkbares/coom-lang"
+Changelog = "https://github.com/denkbares/coom-lang/blob/main/CHANGELOG.md"
+
+[tool.uv.build-backend]
+module-name = ["coom.parser", "coom.compiler", "coom.writer"]
+
+[tool.uv.sources]
+coom-core = { workspace = true }

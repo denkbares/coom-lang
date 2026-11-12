@@ -6,6 +6,26 @@ resolution-markers = [
     "python_full_version < '3.15'",
 ]
 
+[manifest]
+members = [
+    "coom-api",
+    "coom-clingo",
+    "coom-core",
+    "coom-lang",
+]
+
+[manifest.dependency-groups]
+dev = [
+    { name = "antlr4-tools" },
+    { name = "coom-api", editable = "packages/coom-api" },
+    { name = "coom-clingo", editable = "packages/coom-clingo" },
+    { name = "coom-core", editable = "packages/coom-core" },
+    { name = "coom-lang", editable = "packages/coom-lang" },
+    { name = "mypy", specifier = ">=1.11" },
+    { name = "pytest", specifier = ">=8" },
+    { name = "ruff", specifier = ">=0.6" },
+]
+
 [[package]]
 name = "antlr4-python3-runtime"
 version = "4.13.2"
@@ -228,39 +248,55 @@ wheels = [
 ]
 
 [[package]]
+name = "coom-api"
+version = "0.0.1"
+source = { editable = "packages/coom-api" }
+dependencies = [
+    { name = "coom-clingo" },
+    { name = "coom-core" },
+    { name = "coom-lang" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "coom-clingo", editable = "packages/coom-clingo" },
+    { name = "coom-core", editable = "packages/coom-core" },
+    { name = "coom-lang", editable = "packages/coom-lang" },
+]
+
+[[package]]
+name = "coom-clingo"
+version = "0.0.1"
+source = { editable = "packages/coom-clingo" }
+dependencies = [
+    { name = "clingo" },
+    { name = "coom-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "clingo", specifier = ">=5.7,<6" },
+    { name = "coom-core", editable = "packages/coom-core" },
+]
+
+[[package]]
+name = "coom-core"
+version = "0.0.1"
+source = { editable = "packages/coom-core" }
+
+[[package]]
 name = "coom-lang"
 version = "0.0.1"
-source = { editable = "." }
+source = { editable = "packages/coom-lang" }
 dependencies = [
     { name = "antlr4-python3-runtime" },
-]
-
-[package.optional-dependencies]
-asp = [
-    { name = "clingo" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "antlr4-tools" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "ruff" },
+    { name = "coom-core" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "antlr4-python3-runtime", specifier = "==4.13.2" },
-    { name = "clingo", marker = "extra == 'asp'", specifier = ">=5.7,<6" },
-]
-provides-extras = ["asp"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "antlr4-tools" },
-    { name = "mypy", specifier = ">=1.11" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "ruff", specifier = ">=0.6" },
+    { name = "coom-core", editable = "packages/coom-core" },
 ]
 
 [[package]]

@@ -8,7 +8,7 @@ This repository is the home of the language definition and of its Python referen
 
 - Language documentation: https://www.coom-lang.org
 - Specification artifacts: [spec/](spec/) (grammar, conformance suite, schemas)
-- Reference implementation: Python package `coom-lang` (import name `coom`), sources in [src/coom](src/coom)
+- Reference implementation: Python packages sharing the namespace `coom`, sources in [packages/](packages/)
 - Changes to the language: [CHANGELOG.md](CHANGELOG.md)
 
 ## Status
@@ -21,8 +21,7 @@ Work in progress towards COOM 1.0. Nothing in this repository is released yet.
 spec/grammar/        ANTLR 4 grammar of the language
 spec/conformance/    conformance suite, one folder per profile or module
 spec/schema/         JSON schemas (configuration, conformance results)
-src/coom/            Python reference implementation: parser, compiler, model, evaluator, ASP solver
-tests/               unit and conformance tests of the reference implementation
+packages/            Python reference implementation, one folder per package with its sources and tests
 scripts/             grammar build and maintenance scripts
 ```
 
@@ -37,9 +36,19 @@ scripts/             grammar build and maintenance scripts
 Not yet published. Once released:
 
 ```
-pip install coom-lang          # parser, compiler, model, evaluator
-pip install coom-lang[asp]     # plus the clingo based reference solver
+pip install coom-api           # everything below in matching versions, imported from coom.api
 ```
+
+| package | modules | contents | dependencies |
+|---|---|---|---|
+| `coom-core` | `coom.model`, `coom.configuration`, `coom.check`, `coom.diagnostics` | model, configurations, exact evaluation, static checks | none |
+| `coom-lang` | `coom.parser`, `coom.compiler`, `coom.writer` | parser, compiler and writer of the COOM text syntax | coom-core, ANTLR runtime |
+| `coom-clingo` | `coom.clingo` | reference solver | coom-core, clingo |
+| `coom-api` | `coom.api` | all of the above with their main entry points in one module | the three above |
+
+The packages are developed in this repository as one uv workspace, `uv sync` installs all of them for development.
+They are released together with the same version and pin each other exactly. The namespace `coom` is reserved for
+packages from this repository.
 
 ## License
 

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14"]
+build-backend = "uv_build"
+
+[project]
+name = "coom-api"
+version = "0.0.1"
+description = "The COOM product configuration language with its reference implementation in one package"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "denkbares GmbH", email = "info@denkbares.com" }]
+keywords = ["coom", "product configuration", "knowledge base", "solver"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+# the packages of one release are tested together, so each pins the others exactly
+dependencies = [
+    "coom-core==0.0.1",
+    "coom-lang==0.0.1",
+    "coom-clingo==0.0.1",
+]
+
+[project.urls]
+Homepage = "https://www.coom-lang.org"
+Repository = "https://github.com/denkbares/coom-lang"
+Changelog = "https://github.com/denkbares/coom-lang/blob/main/CHANGELOG.md"
+
+[tool.uv.build-backend]
+module-name = "coom.api"
+
+[tool.uv.sources]
+coom-core = { workspace = true }
+coom-lang = { workspace = true }
+coom-clingo = { workspace = true }

@@ -1,4 +1,4 @@
-"""Generate the Python parser in src/coom/parser/_antlr from spec/grammar.
+"""Generate the Python parser of the coom-lang package from spec/grammar.
 
 Copies the grammar to a temporary directory, rewrites the semantic predicates to their Python spelling and runs the
 ANTLR tool through antlr4-tools. The hand written files in the output directory are kept.
@@ -14,7 +14,7 @@ from pathlib import Path
 ANTLR_VERSION = "4.13.2"
 ROOT = Path(__file__).resolve().parent.parent
 GRAMMAR = ROOT / "spec" / "grammar"
-OUTPUT = ROOT / "src" / "coom" / "parser" / "_antlr"
+OUTPUT = ROOT / "packages" / "coom-lang" / "src" / "coom" / "parser" / "_antlr"
 KEEP = {"__init__.py", "COOMParserBase.py"}
 
 # The grammar spells the predicates for Java, the Python target needs self and not.
