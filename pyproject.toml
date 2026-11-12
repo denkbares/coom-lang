@@ -45,6 +45,7 @@ mypy_path = [
     "packages/coom-lang/src",
     "packages/coom-clingo/src",
     "packages/coom-api/src",
+    "packages/coom-clingo/tests",
 ]
 explicit_package_bases = true
 
@@ -60,3 +61,5 @@ follow_imports = "skip"
 testpaths = ["packages"]
 # the test folders of the packages are no packages, so their modules are imported by path
 addopts = ["--import-mode=importlib"]
+# helper modules of the solver tests, the brute force oracle and the model generator
+pythonpath = ["packages/coom-clingo/tests"]
