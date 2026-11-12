@@ -1,4 +1,4 @@
-# Generated from /var/folders/6t/xjsbv5k929s9vkvtz4c0wbcm0000gn/T/tmpthw5uwls/COOM.g4 by ANTLR 4.13.2
+# Generated from /var/folders/6t/xjsbv5k929s9vkvtz4c0wbcm0000gn/T/tmprrkcbqad/COOM.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .COOMParser import COOMParser
@@ -341,6 +341,16 @@ class COOMVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by COOMParser#test_blocked.
     def visitTest_blocked(self, ctx:COOMParser.Test_blockedContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by COOMParser#test_hidden.
+    def visitTest_hidden(self, ctx:COOMParser.Test_hiddenContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by COOMParser#test_readonly.
+    def visitTest_readonly(self, ctx:COOMParser.Test_readonlyContext):
         return self.visitChildren(ctx)
 
 

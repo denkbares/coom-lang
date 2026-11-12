@@ -18,6 +18,8 @@ test_statement
     | test_empty
     | test_available
     | test_blocked
+    | test_hidden
+    | test_readonly
     ;
 
 test_set       : kw='set' path (EQ formula_atom)? ;
@@ -26,5 +28,7 @@ test_reset     : kw='reset' path ;
 test_fixed     : kw='isFixed' path (EQ formula_atom)? ;
 test_shown     : kw='isShown' path (EQ formula_atom)? ;
 test_empty     : kw='isEmpty' path ;
-test_available : kw='isAvailable' path EQ formula_atom ;
-test_blocked   : kw='isBlocked' path EQ formula_atom ;
+test_available : kw='isAvailable' path (EQ formula_atom)? ;
+test_blocked   : kw='isBlocked' path (EQ formula_atom)? ;
+test_hidden    : kw='isHidden' path (EQ formula_atom)? ;
+test_readonly  : kw='isReadonly' path ;

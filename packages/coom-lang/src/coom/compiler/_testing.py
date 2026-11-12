@@ -13,11 +13,14 @@ from coom.model import (
     IsBlocked,
     IsEmpty,
     IsFixed,
+    IsHidden,
+    IsReadonly,
     IsShown,
     Path,
     RemoveValue,
     ResetValue,
     SetValue,
+    Structure,
     TestCase,
     TestStep,
 )
@@ -55,6 +58,8 @@ def _step(compilation: Compilation, expressions: Expressions, node: Any, scope: 
             return ResetValue(_path(expressions, node, scope), span=span)
         case COOMParser.Test_emptyContext():
             return IsEmpty(_path(expressions, node, scope), span=span)
+        case COOMParser.Test_readonlyContext():
+            return IsReadonly(_path(expressions, node, scope), span=span)
         case COOMParser.Test_setContext() | COOMParser.Test_fixedContext() | COOMParser.Test_shownContext():
             path = expressions.assignable(node.path(), scope)
             value = None if node.formula_atom() is None else _value(compilation, expressions, node, path, scope)
@@ -65,12 +70,19 @@ def _step(compilation: Compilation, expressions: Expressions, node: Any, scope: 
             return IsShown(path, value, span=span)
         case COOMParser.Test_availableContext() | COOMParser.Test_blockedContext():
             path = expressions.assignable(node.path(), scope)
-            if not isinstance(path.type, Enumeration):
-                compilation.fail(node.path(), f"{need(node.kw).text} needs a path to an enumeration feature")
-            value = _value(compilation, expressions, node, path, scope)
+            if node.formula_atom() is None and not isinstance(path.type, Structure):
+                compilation.fail(node.path(), f"{need(node.kw).text} needs a value unless the path holds instances")
+            value = None if node.formula_atom() is None else _value(compilation, expressions, node, path, scope)
             if isinstance(node, COOMParser.Test_availableContext):
                 return IsAvailable(path, value, span=span)
             return IsBlocked(path, value, span=span)
+        case COOMParser.Test_hiddenContext():
+            path = expressions.assignable(node.path(), scope)
+            if node.formula_atom() is None:
+                return IsHidden(path, span=span)
+            if not isinstance(path.type, Enumeration):
+                compilation.fail(node.path(), "isHidden with an option needs a path to an enumeration feature")
+            return IsHidden(path, _value(compilation, expressions, node, path, scope), span=span)
         case _:
             raise Abort
 

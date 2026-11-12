@@ -1,10 +1,12 @@
 """Runs the test blocks of a model against the solver.
 
 A test is a session. Its set, remove and reset steps change the inputs, and every set is checked to have a
-completion. isAvailable and isBlocked ask which options a slot can still take. isShown and isEmpty read the slot in
-the configuration the solver completes the inputs to. isShown needs a visible slot whose value is at least a default,
-isEmpty accepts a slot without value or with a value chosen only to complete the configuration. isFixed needs a
-selected value or one the inputs force.
+completion. isAvailable and isBlocked ask whether the inputs with a value set, or instances created, still have a
+completion, without changing the inputs. isShown, isEmpty, isHidden and isReadonly read the slot in the configuration
+the solver completes the inputs to. isShown needs a visible slot whose value is at least a default, isEmpty accepts a
+slot without value or with a value chosen only to complete the configuration. isHidden and isReadonly read the
+effective visibility directive of the slot regardless of its value. isFixed needs a selected value or one the inputs
+force.
 """
 
 from __future__ import annotations
@@ -23,6 +25,8 @@ from coom.model import (
     IsBlocked,
     IsEmpty,
     IsFixed,
+    IsHidden,
+    IsReadonly,
     IsShown,
     Model,
     Path,
@@ -87,16 +91,25 @@ def _step(solver: ClingoSolver, session: Configuration, step: TestStep) -> StepR
                 _remove(session, step.path)
                 return StepResult(step, Status.PASSED)
             case IsAvailable() | IsBlocked():
-                available = step.value.value in solver.feasible(session, step.path)
+                available = _available(solver, session, step)
                 if available == isinstance(step, IsAvailable):
                     return StepResult(step, Status.PASSED)
                 state = "available" if available else "blocked"
-                return StepResult(step, Status.FAILED, f"{step.value.value!r} is {state} for {step.path}")
-            case IsShown() | IsEmpty():
+                what = "creating the instances" if step.value is None else repr(step.value.value)
+                return StepResult(step, Status.FAILED, f"{what} is {state} for {step.path}")
+            case IsShown() | IsEmpty() | IsHidden() | IsReadonly():
                 solved = solver.solve(session)
                 if solved is None:
                     return StepResult(step, Status.FAILED, "the inputs have no completion")
-                failure = _shown(solved, step) if isinstance(step, IsShown) else _empty(solved, step)
+                match step:
+                    case IsShown():
+                        failure = _shown(solved, step)
+                    case IsEmpty():
+                        failure = _empty(solved, step)
+                    case IsHidden():
+                        failure = _hidden(solved, step)
+                    case IsReadonly():
+                        failure = _readonly(solved, step)
                 return StepResult(step, Status.FAILED, failure) if failure else StepResult(step, Status.PASSED)
             case IsFixed():
                 solved = solver.solve(session)
@@ -152,6 +165,17 @@ def _set(session: Configuration, step: SetValue) -> None:
             raise KeyError(f"{step.path} does not lead through instances")
 
 
+def _available(solver: ClingoSolver, session: Configuration, step: IsAvailable | IsBlocked) -> bool:
+    """Whether the inputs with the value of the step set, or its instances created, have a completion.
+
+    The value replaces an input of the slot, so the check runs on a copy of the inputs rather than on the options the
+    inputs leave open.
+    """
+    trial = Configuration.from_json(session.model, session.to_json())
+    _set(trial, SetValue(step.path, step.value))
+    return solver.satisfiable(trial)
+
+
 def _remove(session: Configuration, path: Path) -> None:
     instance: Instance | None = session.root
     slots = _slots(path)
@@ -178,6 +202,28 @@ def _shown(solved: Configuration, step: IsShown) -> str | None:
     if step.value is not None and not _same(assignment.value, step.value.value):
         return f"{step.path} holds {assignment.value!r}"
     return None
+
+
+def _hidden(solved: Configuration, step: IsHidden) -> str | None:
+    """Why a slot or one of its options is not hidden, None if it is."""
+    slot = _slot(solved, step.path)
+    if slot is None:
+        return f"{step.path} does not exist"
+    if step.value is None:
+        return None if visibilities(solved).effective(*slot) is Directive.HIDE else f"{step.path} is not hidden"
+    if step.value.value in visibilities(solved).hidden_options(*slot):
+        return None
+    return f"{step.value.value!r} is not hidden for {step.path}"
+
+
+def _readonly(solved: Configuration, step: IsReadonly) -> str | None:
+    """Why a slot can be changed, None if it is readonly or hidden."""
+    slot = _slot(solved, step.path)
+    if slot is None:
+        return f"{step.path} does not exist"
+    if visibilities(solved).effective(*slot) in (Directive.READONLY, Directive.HIDE):
+        return None
+    return f"{step.path} is not readonly"
 
 
 def _empty(solved: Configuration, step: IsEmpty) -> str | None:

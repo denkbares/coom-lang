@@ -35,6 +35,8 @@ from coom.model import (
     IsDefined,
     IsEmpty,
     IsFixed,
+    IsHidden,
+    IsReadonly,
     IsShown,
     Model,
     Negate,
@@ -264,6 +266,10 @@ class _Writer:
                 keyword = "isAvailable"
             case IsBlocked():
                 keyword = "isBlocked"
+            case IsHidden():
+                keyword = "isHidden"
+            case IsReadonly():
+                keyword = "isReadonly"
             case _:
                 assert_never(step)
         text = f"{keyword} {self.path(step.path)}"

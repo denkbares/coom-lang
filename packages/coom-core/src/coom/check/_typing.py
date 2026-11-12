@@ -28,6 +28,8 @@ from coom.model import (
     IsDefined,
     IsEmpty,
     IsFixed,
+    IsHidden,
+    IsReadonly,
     IsShown,
     Model,
     Negate,
@@ -269,14 +271,12 @@ class TypeChecker:
     def test(self, test: TestCase) -> None:
         for step in test.steps:
             match step:
-                case SetValue() | IsFixed() | IsShown():
+                case SetValue() | IsFixed() | IsShown() | IsAvailable() | IsBlocked() | IsHidden():
                     if step.value is None:
                         self.path(step.path)
                     else:
                         self.assignment(step.path, step.value, step.span)
-                case IsAvailable() | IsBlocked():
-                    self.assignment(step.path, step.value, step.span)
-                case RemoveValue() | ResetValue() | IsEmpty():
+                case RemoveValue() | ResetValue() | IsEmpty() | IsReadonly():
                     self.path(step.path)
                 case _:
                     assert_never(step)

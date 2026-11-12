@@ -26,6 +26,8 @@ from coom.model.testing import (
     IsBlocked,
     IsEmpty,
     IsFixed,
+    IsHidden,
+    IsReadonly,
     IsShown,
     RemoveValue,
     ResetValue,
@@ -78,9 +80,9 @@ def children(node: Node) -> tuple[Node, ...]:
             return tuple(atom for cell in node.cells if cell is not None for atom in cell)
         case CellAtom():
             return (node.value,)
-        case RemoveValue() | ResetValue() | IsEmpty():
+        case RemoveValue() | ResetValue() | IsEmpty() | IsReadonly():
             return (node.path,)
-        case SetValue() | IsFixed() | IsShown() | IsAvailable() | IsBlocked():
+        case SetValue() | IsFixed() | IsShown() | IsAvailable() | IsBlocked() | IsHidden():
             return (node.path,) if node.value is None else (node.path, node.value)
         case _:
             assert_never(node)

@@ -9,6 +9,15 @@ do not bump the version.
 
 The format follows https://keepachangelog.com. Entries name the profile or module they touch.
 
+## 1.1 (unreleased)
+
+### Added
+
+- TEST: `isAvailable` and `isBlocked` accept values of every type, not only options, and leave out the value for a
+  path to a structure feature to check the creation of its instance. This makes refused inputs testable.
+- TEST: the steps `isHidden p`, `isHidden p = o` and `isReadonly p` assert the effective visibility directive of a slot
+  and hidden options.
+
 ## 1.0 (unreleased)
 
 Initial version of the language, defining the required profile CORE, the profiles N-OUT, N-LIN, N-FULL, C-FIX, C-USER,

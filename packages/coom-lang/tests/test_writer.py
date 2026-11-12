@@ -171,6 +171,7 @@ def test_tests() -> None:
         ' set color = Red\n set weight = -1.5\n set note = "x"\n set stand\n'
         " remove color\n reset weight\n isFixed color = Blue\n isShown stand = true\n isShown note\n"
         " isEmpty bags\n isAvailable bags[0].size = small\n isBlocked color = 'light green'\n"
+        " isBlocked weight = 3\n isAvailable bags[1]\n isHidden color = Red\n isHidden note\n isReadonly note\n"
         " set this.Red = Color.Blue\n"
         "}\n"
         "test { isEmpty bike.bags }"

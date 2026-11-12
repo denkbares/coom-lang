@@ -21,6 +21,8 @@ from coom.model import (
     Index,
     IsAvailable,
     IsDefined,
+    IsHidden,
+    IsReadonly,
     Model,
     Not,
     Numerical,
@@ -235,7 +237,20 @@ def test_tests() -> None:
     assert test.origin is model.structure("Bike")
     assert test.steps[0] == SetValue(path(model, "Bike", "color"), Constant(option(model, "Color.Red")))
     assert isinstance(test.steps[1], IsAvailable)
-    assert errors("test Bike { isAvailable weight = 3 }") == ["isAvailable needs a path to an enumeration feature"]
+    assert errors("test Bike { isAvailable weight = 3 }") == []
+    assert errors("test Bike { isBlocked weight }") == ["isBlocked needs a value unless the path holds instances"]
+    assert errors("test Bike { isBlocked bags[1] }") == []
+
+
+def test_visibility_tests() -> None:
+    model = compiled("test Bike {\n isHidden color = Red\n isHidden weight\n isReadonly weight\n}")
+    hidden, feature, readonly = model.tests[0].steps
+    assert hidden == IsHidden(path(model, "Bike", "color"), Constant(option(model, "Color.Red")))
+    assert feature == IsHidden(path(model, "Bike", "weight"))
+    assert readonly == IsReadonly(path(model, "Bike", "weight"))
+    assert errors("test Bike { isHidden weight = 3 }") == [
+        "isHidden with an option needs a path to an enumeration feature"
+    ]
 
 
 def test_errors_skip_the_statement_and_keep_the_rest() -> None:
