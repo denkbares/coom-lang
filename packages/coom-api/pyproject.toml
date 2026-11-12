@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "coom-api"
-version = "0.0.1"
+version = "0.0.1a1"
 description = "The COOM product configuration language with its reference implementation in one package"
 readme = "README.md"
 license = "MIT"
@@ -21,10 +21,14 @@ classifiers = [
 ]
 # the packages of one release are tested together, so each pins the others exactly
 dependencies = [
-    "coom-core==0.0.1",
-    "coom-lang==0.0.1",
-    "coom-clingo==0.0.1",
+    "coom-core==0.0.1a1",
+    "coom-lang==0.0.1a1",
+    "coom-clingo==0.0.1a1",
+    "coom-cli==0.0.1a1",
 ]
+
+[project.optional-dependencies]
+mcp = ["coom-mcp==0.0.1a1"]
 
 [project.urls]
 Homepage = "https://www.coom-lang.org"
@@ -38,3 +42,5 @@ module-name = "coom.api"
 coom-core = { workspace = true }
 coom-lang = { workspace = true }
 coom-clingo = { workspace = true }
+coom-cli = { workspace = true }
+coom-mcp = { workspace = true }

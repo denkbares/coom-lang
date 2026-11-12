@@ -11,7 +11,9 @@ def test_coom_is_a_namespace_package() -> None:
 
 
 def test_every_part_of_the_namespace_imports() -> None:
-    for name in ("model", "configuration", "diagnostics", "check", "parser", "compiler", "writer", "clingo", "api"):
+    core = ("model", "configuration", "diagnostics", "check")
+    names = (*core, "parser", "compiler", "writer", "clingo", "cli", "mcp", "api")
+    for name in names:
         importlib.import_module(f"coom.{name}")
 
 

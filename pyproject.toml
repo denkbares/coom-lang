@@ -9,6 +9,8 @@ coom-core = { workspace = true }
 coom-lang = { workspace = true }
 coom-clingo = { workspace = true }
 coom-api = { workspace = true }
+coom-cli = { workspace = true }
+coom-mcp = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -16,6 +18,8 @@ dev = [
     "coom-lang",
     "coom-clingo",
     "coom-api",
+    "coom-cli",
+    "coom-mcp",
     "pytest>=8",
     "mypy>=1.11",
     "ruff>=0.6",
@@ -45,6 +49,8 @@ mypy_path = [
     "packages/coom-lang/src",
     "packages/coom-clingo/src",
     "packages/coom-api/src",
+    "packages/coom-cli/src",
+    "packages/coom-mcp/src",
     "packages/coom-clingo/tests",
 ]
 explicit_package_bases = true

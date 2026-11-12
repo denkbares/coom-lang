@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "coom-core"
-version = "0.0.1"
+version = "0.0.1a1"
 description = "Model, configurations and evaluation of the COOM product configuration language"
 readme = "README.md"
 license = "MIT"

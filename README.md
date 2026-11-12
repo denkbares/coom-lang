@@ -36,7 +36,7 @@ scripts/             grammar build and maintenance scripts
 Not yet published. Once released:
 
 ```
-pip install coom-api           # everything below in matching versions, imported from coom.api
+pip install coom-api           # everything below in matching versions (except MCP), imported from coom.api
 ```
 
 | package | modules | contents | dependencies |
@@ -44,7 +44,9 @@ pip install coom-api           # everything below in matching versions, imported
 | `coom-core` | `coom.model`, `coom.configuration`, `coom.check`, `coom.diagnostics` | model, configurations, exact evaluation, static checks | none |
 | `coom-lang` | `coom.parser`, `coom.compiler`, `coom.writer` | parser, compiler and writer of the COOM text syntax | coom-core, ANTLR runtime |
 | `coom-clingo` | `coom.clingo` | reference solver | coom-core, clingo |
-| `coom-api` | `coom.api` | all of the above with their main entry points in one module | the three above |
+| `coom-cli` | `coom.cli` | the `coom` command | coom-core, coom-lang |
+| `coom-mcp` | `coom.mcp` | MCP server, under development | coom-core, coom-lang |
+| `coom-api` | `coom.api` | all of the above with their main entry points in one module, the MCP server as extra `[mcp]` | the packages above |
 
 The packages are developed in this repository as one uv workspace, `uv sync` installs all of them for development.
 They are released together with the same version and pin each other exactly. The namespace `coom` is reserved for

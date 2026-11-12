@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "coom-lang"
-version = "0.0.1"
+version = "0.0.1a1"
 description = "Parser, compiler and writer of the COOM product configuration language"
 readme = "README.md"
 license = "MIT"
@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "coom-core==0.0.1",
+    "coom-core==0.0.1a1",
     "antlr4-python3-runtime==4.13.2",
 ]
 
