@@ -7,7 +7,7 @@ authors:
     website: https://www.denkbares.com
 repository-code: https://github.com/denkbares/coom-lang
 url: https://www.coom-lang.org
-license: Apache-2.0
+license: MIT
 preferred-citation:
   type: article
   title: Towards Industrial-scale Product Configuration

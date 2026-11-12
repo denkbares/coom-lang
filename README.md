@@ -43,7 +43,7 @@ pip install coom-lang[asp]     # plus the clingo based reference solver
 
 ## License
 
-Grammar, conformance suite, schemas and source code are licensed under the Apache License 2.0, see [LICENSE](LICENSE).
+Grammar, conformance suite, schemas and source code are licensed under the MIT License, see [LICENSE](LICENSE).
 The language documentation at https://www.coom-lang.org is licensed under CC BY-ND 4.0.
 Implementing the COOM language does not require a license.
 
