@@ -27,7 +27,7 @@ def apply(
     """Raises the role of every value of the configuration that is a consequence to consequence.
 
     The configuration is the one of the first model, given by its atoms, and cautious are the atoms true in every model
-    among sx, val, absent, undefined, on and applied. Selected values keep their role.
+    among exists, value, absent, undefined, on and applied. Selected values keep their role.
     """
     instances = _instances(configuration, encoding)
     selected = set()
@@ -43,7 +43,7 @@ def apply(
             continue
         type_ = slot.feature.type
         if isinstance(type_, Structure):
-            consequence = atom("sx", term) in cautious
+            consequence = atom("exists", term) in cautious
         elif isinstance(type_, Enumeration | Boolean):
             value = instance.get(slot.feature, slot.index)
             consequence = isinstance(value, Option | bool) and _value_atom(term, value) in cautious
@@ -54,7 +54,7 @@ def apply(
 
 
 def _value_atom(term: Symbol, value: ConstantValue) -> Symbol:
-    return atom("val", term, value_term(value))
+    return atom("value", term, value_term(value))
 
 
 def _instances(configuration: Configuration, encoding: Encoding) -> dict[Symbol, Instance]:
@@ -123,7 +123,7 @@ class _Fixed:
         # the same in every model once everything it reads is
         if atom("valued", Number(producer.id), origin) not in self.first:
             return False
-        if atom("tgt", Number(producer.target_id), origin, slot) not in self.first:
+        if atom("target", Number(producer.target_id), origin, slot) not in self.first:
             return False
         if not all(self.atom(symbol) for symbol in self.dependencies.direct(key)):
             return False
@@ -135,12 +135,12 @@ class _Fixed:
         """Whether an atom read by a producer has the same truth value in every model."""
         name, arguments = symbol.name, symbol.arguments
         match name:
-            case "sx" | "ex":
+            case "exists":
                 slot = arguments[0]
                 if slot == ROOT:
                     return True
-                return atom("sx", slot) in self.cautious or atom("absent", slot) in self.cautious
-            case "val":
+                return symbol in self.cautious or atom("absent", slot) in self.cautious
+            case "value":
                 # an option is false in every model if the slot is absent or holds another value in every model
                 slot = arguments[0]
                 if symbol in self.cautious or atom("absent", slot) in self.cautious:

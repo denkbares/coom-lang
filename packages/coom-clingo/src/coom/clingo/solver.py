@@ -28,7 +28,7 @@ _ENCODING = (
 # Consequences are computed over the atoms the encoding decides by itself. Atoms the propagator decides, such as the
 # outcome of a numeric comparison, follow from these, and refuting them one total assignment at a time is expensive.
 _PROJECTION = "".join(
-    f"#project {signature}.\n" for signature in ("sx/1", "val/2", "absent/1", "undefined/1", "on/2", "applied/2")
+    f"#project {signature}.\n" for signature in ("exists/1", "value/2", "absent/1", "undefined/1", "on/2", "applied/2")
 )
 
 
@@ -110,7 +110,7 @@ class ClingoSolver:
         ignored, since they never restrict what is available.
         """
         term, values = self._slot(slot)
-        atoms = {Function("val", [term, value_term(value)]): value for value in values}
+        atoms = {Function("value", [term, value_term(value)]): value for value in values}
         brave: set[Symbol] = set()
 
         def collect(model: ClingoModel, _: object) -> None:

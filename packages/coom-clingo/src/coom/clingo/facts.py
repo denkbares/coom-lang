@@ -108,7 +108,7 @@ class Universe:
         structures: dict[Symbol, Structure] = {}
         slot_atoms: list[Symbol] = []
         for atom in atoms:
-            if atom.match("inst", 2):
+            if atom.match("instance", 2):
                 structures[atom.arguments[0]] = model.structure(atom.arguments[1].string)
             elif atom.match("slot", 4):
                 slot_atoms.append(atom)
@@ -283,7 +283,7 @@ class Encoding:
             for position, option in enumerate(enumeration.options):
                 self._fact("option", enumeration.name, option.name, position)
                 for attribute, value in option.values.items():
-                    self._fact("attr", enumeration.name, option.name, attribute.name, value_term(value))
+                    self._fact("attribute", enumeration.name, option.name, attribute.name, value_term(value))
                     if isinstance(value, str) and not value.strip():
                         self._fact("falsy", value_term(value))
 
@@ -313,9 +313,9 @@ class Encoding:
         except _Unsupported as error:
             self._report(Severity.ERROR, str(error), behavior)
             return
-        self._fact("beh", id, origin.name)
+        self._fact("behavior", id, origin.name)
         for condition in dict.fromkeys(behavior.conditions):
-            self._fact("cond", id, self._condition(condition, origin))
+            self._fact("precondition", id, self._condition(condition, origin))
 
     def _require(self, id: int, condition: Condition, origin: Structure) -> None:
         self._fact("require", id, self._condition(condition, origin))
@@ -333,10 +333,8 @@ class Encoding:
             if not (_is_discrete_constant(value) or _is_scalar_discrete_path(value)):
                 raise _Unsupported(f"the solver needs an option, a truth value or a path as the value of an {kind}")
             target_id = self._path(target, origin, target=True)
-            if kind == "imply":
-                self._fact("dimply", id, target_id, self._formula(value, origin))
-            else:
-                self._fact("ddefault", id, target_id, self._formula(value, origin))
+            self._fact("assign", self._id(), id, Function(kind), target_id, self._formula(value, origin))
+            if kind == "default":
                 self.discrete_defaults.append(DiscreteDefault(id, target, target_id, origin))
         else:
             self._producer(id, kind, target, value, origin)
@@ -358,37 +356,37 @@ class Encoding:
         target_id = self._path(target, origin, target=True)
         formula_id = self._formula(formula, origin)
         self.producers[id] = Producer(id, behavior, kind, target, target_id, formula, origin)
-        self._fact("producer", id, behavior, Function(kind), target_id, formula_id)
+        self._fact("assign", id, behavior, Function(kind), target_id, formula_id)
 
     # Conditions and formulas
 
     def _condition(self, condition: Condition, origin: Structure) -> int:
         id = self._id()
-        self._fact("expr", id, origin.name)
+        self._fact("origin", id, origin.name)
         match condition:
             case Compare():
                 left = self._formula(condition.left, origin)
                 right = self._formula(condition.right, origin)
                 if _is_discrete_formula(condition.left) and _is_discrete_formula(condition.right):
-                    self._fact("dcmp", id, Function(_OPERATORS[condition.op]), left, right)
+                    self._fact("discrete_compare", id, Function(_OPERATORS[condition.op]), left, right)
                 else:
                     self._leaf(id, condition, origin, left, right)
             case IsDefined(formula=PathAccess() as access):
-                self._fact("isdef", id, self._formula(access, origin))
+                self._fact("is_defined", id, self._formula(access, origin))
             case IsDefined():
                 self._leaf(id, condition, origin, self._formula(condition.formula, origin))
             case Not():
-                self._fact("cnot", id, self._condition(condition.operand, origin))
+                self._fact("negation", id, self._condition(condition.operand, origin))
             case And():
-                self._fact("conj", id)
+                self._fact("and", id)
                 for operand in condition.operands:
-                    self._fact("cand", id, self._condition(operand, origin))
+                    self._fact("and", id, self._condition(operand, origin))
             case Or():
-                self._fact("disj", id)
+                self._fact("or", id)
                 for operand in condition.operands:
-                    self._fact("cor", id, self._condition(operand, origin))
+                    self._fact("or", id, self._condition(operand, origin))
             case Constant(value=bool() as value):
-                self._fact("cbool", id, Function("true" if value else "false"))
+                self._fact("constant", id, value_term(value))
             case Constant():
                 raise _Unsupported(f"the constant {condition.value} is not a condition")
             case _:
@@ -399,7 +397,7 @@ class Encoding:
         self.leaves[id] = Leaf(id, node, origin)
         self._fact("leaf", id)
         for operand in operands:
-            self._fact("arg", id, operand)
+            self._fact("operand", id, operand)
 
     def _formula(self, formula: Formula, origin: Structure) -> int:
         match formula:
@@ -407,39 +405,39 @@ class Encoding:
                 return self._path(formula.path, origin)
             case Constant():
                 id = self._id()
-                self._fact("expr", id, origin.name)
-                self._fact("const", id, value_term(formula.value))
+                self._fact("origin", id, origin.name)
+                self._fact("constant", id, value_term(formula.value))
                 return id
             case Negate() | Binary() | Call():
                 id = self._id()
-                self._fact("expr", id, origin.name)
+                self._fact("origin", id, origin.name)
                 self._fact("compound", id)
                 if isinstance(formula, Call) and formula.function in _AGGREGATES:
                     self._fact("aggregate", id)
                 for operand in _operands(formula):
-                    self._fact("arg", id, self._formula(operand, origin))
+                    self._fact("operand", id, self._formula(operand, origin))
                 return id
             case _:
                 assert_never(formula)
 
     def _path(self, path: Path, origin: Structure, *, target: bool = False) -> int:
         id = self._id()
-        self._fact("expr", id, origin.name)
-        self._fact("pstart", id, Function("origin" if path.origin is origin else "root"))
-        self._fact("plen", id, len(path.steps))
-        self._fact("pkind", id, Function("disc" if is_discrete(path.type) else "num"))
+        self._fact("origin", id, origin.name)
+        self._fact("path_start", id, Function("origin" if path.origin is origin else "root"))
+        self._fact("path_length", id, len(path.steps))
+        self._fact("path_kind", id, Function("discrete" if is_discrete(path.type) else "numeric"))
         if path.is_range:
-            self._fact("prange", id)
+            self._fact("path_range", id)
         if target:
             self._fact("target", id)
         for number, step in enumerate(path.steps, start=1):
             match step:
                 case FeatureStep(feature=feature, index=None):
-                    self._fact("pstep", id, number, feature.name, 0, max((feature.max or 1) - 1, 0))
+                    self._fact("path_step", id, number, feature.name, 0, max((feature.max or 1) - 1, 0))
                 case FeatureStep(feature=feature, index=index) if index is not None:
-                    self._fact("pstep", id, number, feature.name, index.first, index.last)
+                    self._fact("path_step", id, number, feature.name, index.first, index.last)
                 case AttributeStep(attribute=attribute):
-                    self._fact("pattr", id, number, attribute.name)
+                    self._fact("path_attribute", id, number, attribute.name)
         return id
 
     # Inputs
@@ -453,12 +451,12 @@ class Encoding:
         names: dict[Symbol, str] = {ROOT: configuration.root.name}
         for term, feature, value in self._assignments(configuration.root, ROOT):
             if isinstance(value, Instance):
-                facts.append(Function("given", [term]))
+                facts.append(Function("input", [term]))
                 names[term] = value.name
             elif is_discrete(feature.type):
-                facts.append(Function("given_val", [term, value_term(value)]))
+                facts.append(Function("input", [term, value_term(value)]))
             else:
-                facts.append(Function("given_num", [term]))
+                facts.append(Function("input", [term]))
                 values[term] = value
         return facts, values, names
 

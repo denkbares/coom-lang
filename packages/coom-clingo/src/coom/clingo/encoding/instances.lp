@@ -8,6 +8,6 @@
 #defined feature/4.
 #defined kind/3.
 
-inst(root,":root").
-slot(s(N,F,I),N,F,I) :- inst(N,S), feature(S,F,_,Max), I = 0..Max-1.
-inst(X,T) :- slot(X,N,F,_), inst(N,S), kind(S,F,struct(T)).
+instance(root,":root").
+slot(s(N,F,I),N,F,I) :- instance(N,S), feature(S,F,_,Max), I = 0..Max-1.
+instance(X,T) :- slot(X,N,F,_), instance(N,S), kind(S,F,struct(T)).

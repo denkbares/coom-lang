@@ -50,7 +50,7 @@ type View = Callable[[Symbol], bool]
 type Key = tuple[int, Symbol]
 """A producer or leaf together with the origin instance it is evaluated at."""
 
-_OUTCOMES = {Truth.TRUE: "t", Truth.FALSE: "f", Truth.INDEFINITE: "i"}
+_OUTCOMES = {Truth.TRUE: "true", Truth.FALSE: "false", Truth.INDEFINITE: "indefinite"}
 _TRUE, _FALSE = Function("b", [Function("true")]), Function("b", [Function("false")])
 
 
@@ -83,11 +83,11 @@ class Dependencies:
             for origin in self.universe.of_structure.get(producer.origin, ()):
                 key = (producer.id, origin)
                 on, valued = atom("on", _number(producer.id), origin), atom("valued", _number(producer.id), origin)
-                local = _Local({on, valued, atom("ex", origin)})
+                local = _Local({on, valued, atom("exists", origin)})
                 targets: set[Symbol] = set()
                 self._walk(producer.target, producer.origin, origin, local, targets)
                 for slot in targets:
-                    local.symbols.add(atom("tgt", _number(producer.target_id), origin, slot))
+                    local.symbols.add(atom("target", _number(producer.target_id), origin, slot))
                     self.writers.setdefault(slot, []).append(key)
                 self._formula(producer.formula, producer.origin, origin, local)
                 self.producers.append(key)
@@ -103,7 +103,7 @@ class Dependencies:
         self.leaves: dict[Key, _Local] = {}
         for leaf in encoding.leaves.values():
             for origin in self.universe.of_structure.get(leaf.origin, ()):
-                local = _Local({atom("ex", origin)})
+                local = _Local({atom("exists", origin)})
                 self._condition(leaf.node, leaf.origin, origin, local)
                 self.leaves[leaf.id, origin] = local
 
@@ -171,7 +171,7 @@ class Dependencies:
     ) -> None:
         """Collects the atoms a path may read, or for a target path the slots it may write."""
         start = origin if path.origin is structure else ROOT
-        local.symbols.add(atom("ex", start))
+        local.symbols.add(atom("exists", start))
         current: list[Any] = [start]
         for number, step in enumerate(path.steps, start=1):
             final = number == len(path.steps)
@@ -185,7 +185,7 @@ class Dependencies:
                     for slot in slots:
                         if targets is not None and final:
                             targets.add(slot)
-                            local.symbols.add(atom("sx", slot))
+                            local.symbols.add(atom("exists", slot))
                             continue
                         self._read(slot, local, following)
                 elif isinstance(step, AttributeStep) and isinstance(value, Option):
@@ -195,18 +195,17 @@ class Dependencies:
             current = list(dict.fromkeys(following))
 
     def _read(self, slot: Symbol, local: _Local, following: list[Any]) -> None:
-        local.symbols.add(atom("sx", slot))
+        local.symbols.add(atom("exists", slot))
         type_ = self.universe.slots[slot].feature.type
         match type_:
             case Structure():
-                local.symbols.add(atom("ex", slot))
                 following.append(slot)
             case Enumeration():
                 for option in type_.options:
-                    local.symbols.add(atom("val", slot, value_term(option)))
+                    local.symbols.add(atom("value", slot, value_term(option)))
                     following.append(option)
             case Boolean():
-                local.symbols.update((atom("val", slot, _TRUE), atom("val", slot, _FALSE)))
+                local.symbols.update((atom("value", slot, _TRUE), atom("value", slot, _FALSE)))
             case _:
                 local.symbols.add(atom("defined", slot))
                 local.reads.add(slot)
@@ -263,13 +262,13 @@ def assemble(
     instances = {ROOT: configuration.root}
     defaults = _default_slots(encoding, dependencies, view)
     for term, info in universe.instances.items():
-        if info.parent is None or info.feature is None or not view(atom("ex", term)):
+        if info.parent is None or info.feature is None or not view(atom("exists", term)):
             continue
         parent = instances.get(info.parent)
         if parent is None:
             continue
         child = configuration.new(info.structure, names.get(term))
-        role = Role.SELECTED if view(atom("given", term)) else Role.COMPLETION
+        role = Role.SELECTED if view(atom("input", term)) else Role.COMPLETION
         parent.set(info.feature, child, info.index, role=role)
         instances[term] = child
     for term, slot in universe.slots.items():
@@ -285,8 +284,8 @@ def assemble(
         else:
             continue
         for value in values:
-            if view(atom("val", term, value_term(value))):
-                if view(atom("given_val", term, value_term(value))):
+            if view(atom("value", term, value_term(value))):
+                if view(atom("input", term, value_term(value))):
                     role = Role.SELECTED
                 elif term in defaults:
                     role = Role.DEFAULT
@@ -304,7 +303,7 @@ def _default_slots(encoding: Encoding, dependencies: Dependencies, view: View) -
         for origin in encoding.universe.of_structure.get(default.origin, ()):
             if view(atom("applied", _number(default.behavior), origin)):
                 for slot in dependencies.default_targets[default.behavior, origin]:
-                    if view(atom("tgt", _number(default.target_id), origin, slot)):
+                    if view(atom("target", _number(default.target_id), origin, slot)):
                         slots.add(slot)
     return slots
 
@@ -386,7 +385,7 @@ def _produce(candidate: Candidate, encoding: Encoding, dependencies: Dependencie
         return False
     role = Role.DEFAULT if producer.kind == "default" else Role.COMPLETION
     for slot in dependencies.targets[key]:
-        if not view(atom("tgt", _number(producer.target_id), key[1], slot)):
+        if not view(atom("target", _number(producer.target_id), key[1], slot)):
             continue
         info = encoding.universe.slots[slot]
         instance = candidate.instances.get(info.instance)
@@ -448,8 +447,8 @@ class Propagator(ClingoPropagator):
 
     def init(self, init: PropagateInit) -> None:
         signatures = (
-            ("ex", 1), ("sx", 1), ("val", 2), ("defined", 1), ("on", 2), ("valued", 2), ("tgt", 3), ("ready", 2),
-            ("th", 3), ("blank", 1), ("applied", 2), ("given", 1), ("given_val", 2),
+            ("exists", 1), ("value", 2), ("defined", 1), ("on", 2), ("valued", 2), ("target", 3), ("ready", 2),
+            ("truth", 3), ("blank", 1), ("applied", 2), ("input", 1), ("input", 2),
         )  # fmt: skip
         for name, arity in signatures:
             for symbolic in init.symbolic_atoms.by_signature(name, arity):
@@ -461,7 +460,7 @@ class Propagator(ClingoPropagator):
             self._producer_cones[key] = self._lits(symbols)
         assignment = init.assignment
         for key, local in self.dependencies.leaves.items():
-            symbols = {atom("ready", _number(key[0]), key[1]), *(_outcome(key, name) for name in "tfi")}
+            symbols = {atom("ready", _number(key[0]), key[1]), *(_outcome(key, name) for name in _OUTCOMES.values())}
             if not any(symbol in self._literals for symbol in symbols):
                 continue
             cone, producers = self.dependencies.cone(local.symbols, local.reads)
@@ -557,7 +556,7 @@ class Propagator(ClingoPropagator):
     def _expected(self, view: View, key: Key, origin: Instance) -> str | None:
         """The outcome atom a leaf must take, where only an indefinite outcome is known before it is ready."""
         expected = outcome(self.encoding.leaves[key[0]], origin)
-        if view(atom("ready", _number(key[0]), key[1])) or expected == "i":
+        if view(atom("ready", _number(key[0]), key[1])) or expected == "indefinite":
             return expected
         return None
 
@@ -565,7 +564,7 @@ class Propagator(ClingoPropagator):
         """Adds the nogoods that fix the outcome atoms of a leaf, False if that fails the assignment."""
         assignment = control.assignment
         base = self._current(assignment, self._leaf_cones[key])
-        for name in "tfi":
+        for name in _OUTCOMES.values():
             literal = self._literals.get(_outcome(key, name))
             wanted = name == expected
             if literal is None:
@@ -580,4 +579,4 @@ class Propagator(ClingoPropagator):
 
 
 def _outcome(key: Key, name: str) -> Symbol:
-    return atom("th", _number(key[0]), key[1], Function(name))
+    return atom("truth", _number(key[0]), key[1], Function(name))

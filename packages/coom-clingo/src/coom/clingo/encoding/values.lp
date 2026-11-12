@@ -2,15 +2,15 @@
 %
 % Options are terms o(E,O), truth values b(true) and b(false). Numbers and texts are not represented, the
 % propagator computes them. Their slots only carry the definedness atom defined(X).
-%   option(E,O,Ord)    option O of enumeration E at position Ord
-%   attr(E,O,A,V)      the value of attribute A of option O, n("1.5") for numbers and t("...") for texts
+%   option(E,O,Ord)        option O of enumeration E at position Ord
+%   attribute(E,O,A,V)     the value of attribute A of option O, n("1.5") for numbers and t("...") for texts
 
 #defined option/3.
 
-1 { val(X,o(E,O)) : option(E,O,_) } 1 :- sx(X), skind(X,enum(E)).
-1 { val(X,b(true)); val(X,b(false)) } 1 :- sx(X), skind(X,bool).
+1 { value(X,o(E,O)) : option(E,O,_) } 1 :- exists(X), kind(X,enum(E)).
+1 { value(X,b(true)); value(X,b(false)) } 1 :- exists(X), kind(X,bool).
 
-sx(X) :- given_val(X,_).
-:- given_val(X,V), not val(X,V).
+exists(X) :- input(X,_).
+:- input(X,V), not value(X,V).
 
-defined(X) :- given_num(X).
+defined(X) :- input(X), numeric(X).

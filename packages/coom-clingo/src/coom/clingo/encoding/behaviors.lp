@@ -1,36 +1,36 @@
-% Behaviors: preconditions, requirements, tables and implications.
+% Behaviors: preconditions, requirements, tables and assigns.
 %
-%   beh(B,S), cond(B,X)        behavior B of structure S with its preconditions
-%   require(B,X)               the condition X must be possibly true, tables are lowered to it
-%   dimply(B,T,V)              the discrete slots of path T hold the value of V
-%   producer(P,B,Kind,T,X)     the numeric or text slots of path T take the value of formula X, Kind being
-%                              imply, default or require (a determining equality)
+%   behavior(B,S), precondition(B,X)   behavior B of structure S with its preconditions
+%   require(B,X)                       the condition X must be possibly true, tables are lowered to it
+%   assign(A,B,Kind,T,V)               assign A of behavior B writes the value of V into the slots of path T, Kind
+%                                      being imply, default or require (a determining equality)
 
-#defined beh/2.
-#defined cond/2.
+#defined behavior/2.
+#defined precondition/2.
 #defined require/2.
-#defined dimply/3.
-#defined producer/5.
+#defined assign/5.
 
-% A behavior fires where all its preconditions are definitely true.
-fires(B,O) :- beh(B,S), inst(O,S), ex(O), dt(X,O) : cond(B,X).
+% A behavior fires where all its preconditions are satisfied.
+fires(B,O) :- behavior(B,S), instance(O,S), exists(O), sat(X,O) : precondition(B,X).
 
 % A requirement fails its candidate when it cannot become true.
-:- require(B,X), fires(B,O), not can(X,O,t).
+:- require(B,X), fires(B,O), not may_be(X,O,true).
 
-% Discrete implications create their target slot and fix its value.
-ivalue(B,O,W) :- dimply(B,_,V), fires(B,O), const(V,W).
-ivalue(B,O,W) :- dimply(B,_,V), fires(B,O), pval(V,O,W).
-sx(X) :- dimply(B,T,_), ivalue(B,O,_), tgt(T,O,X).
-:- dimply(B,T,_), ivalue(B,O,W), tgt(T,O,X), not val(X,W).
+% An assign is active when its behavior fires, or for a default when the default is applied.
+active(A,O) :- assign(A,B,imply,_,_), fires(B,O).
+active(A,O) :- assign(A,B,require,_,_), fires(B,O).
+active(A,O) :- assign(A,B,default,_,_), applied(B,O).
 
-% A producer is active when its behavior fires, or its default is applied, and is on once its formula is ready.
-% Readiness is necessary for a value but not sufficient, an aggregate over nothing has none. The propagator decides
-% valued(P,O) by evaluating the formula, and only valued producers define their target slots. Every defined value is
-% therefore founded on the definedness of what its formula reads.
-pact(P,O) :- producer(P,B,imply,_,_), fires(B,O).
-pact(P,O) :- producer(P,B,require,_,_), fires(B,O).
-pact(P,O) :- producer(P,B,default,_,_), applied(B,O).
-on(P,O) :- pact(P,O), producer(P,_,_,_,X), ready(X,O).
-{ valued(P,O) } :- on(P,O).
-defined(Y) :- valued(P,O), producer(P,_,_,T,_), tgt(T,O,Y).
+% Discrete assigns create their target slot and fix its value.
+assigned(A,O,W) :- assign(A,_,_,T,V), path_kind(T,discrete), active(A,O), constant(V,W).
+assigned(A,O,W) :- assign(A,_,_,T,V), path_kind(T,discrete), active(A,O), path_value(V,O,W).
+exists(X) :- assigned(A,O,_), assign(A,_,_,T,_), target(T,O,X).
+:- assigned(A,O,W), assign(A,_,_,T,_), target(T,O,X), not value(X,W).
+
+% A numeric or text assign is on once its formula is ready. Readiness is necessary for a value but not sufficient,
+% an aggregate over nothing has none. The propagator decides valued(A,O) by evaluating the formula, and only valued
+% assigns define their target slots. Every defined value is therefore founded on the definedness of what its formula
+% reads.
+on(A,O) :- active(A,O), assign(A,_,_,T,X), path_kind(T,numeric), ready(X,O).
+{ valued(A,O) } :- on(A,O).
+defined(Y) :- valued(A,O), assign(A,_,_,T,_), target(T,O,Y).
