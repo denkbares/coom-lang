@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
+from decimal import Decimal
 
 from coom.compiler import compile_text
 from coom.configuration import Configuration, Instance
@@ -33,6 +34,10 @@ _ROOT_CONDITIONS = (
     "x = 3",
     "y > x",
     "parts[0].n > 3",
+    "f > 2.5",
+    "x = f",
+    "z + 1",
+    "(10 / x) + y > 3",
 )
 
 _ROOT_FORMULAS = (
@@ -51,6 +56,10 @@ _ROOT_FORMULAS = (
     "z",
     "parts[0].n",
     "x - y",
+    "f",
+    "f * 2",
+    "round(f, 0)",
+    "(10 / x) + y",
 )
 
 _PART_CONDITIONS = ("size = small", "size != large", "n > 3", "n = 2")
@@ -89,7 +98,7 @@ def _condition(generator: random.Random, atoms: tuple[str, ...]) -> str:
 
 
 def _root_statement(generator: random.Random) -> list[str]:
-    target = generator.choice(("x", "y", "z"))
+    target = generator.choice(("x", "y", "z", "f"))
     formula = generator.choice(_ROOT_FORMULAS)
     condition = _condition(generator, _ROOT_CONDITIONS)
     match generator.randrange(7):
@@ -145,6 +154,7 @@ structure Root {{
     num 0-20 x
     num 0-20 y
     0..1 num 0-20 z
+    num.# 0-20 f
 }}
 structure Part {{
     Size size
@@ -169,8 +179,10 @@ def _inputs(generator: random.Random, model: Model) -> Configuration | None:
     assert isinstance(root, Instance)
     for _ in range(generator.randrange(1, 4)):
         match generator.randrange(6):
-            case 0 | 5:
+            case 0:
                 root.set(generator.choice(("x", "y", "z")), generator.randrange(0, 8))
+            case 5:
+                root.set("f", Decimal(generator.randrange(0, 80)) / 10)
             case 1:
                 root.set("color", generator.choice(("A", "B")))
             case 2:

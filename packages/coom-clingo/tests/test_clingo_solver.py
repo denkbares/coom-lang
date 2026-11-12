@@ -383,7 +383,113 @@ behavior Bike {
     assert written is not None and part(written).get("marked") == 1
 
 
+MIXED_GRIDS = """
+product { Bike bike }
+structure Bike {
+    num coarse
+    num.## fine
+    num.## other
+}
+"""
+
+
+def test_inputs_agree_with_requirements_at_the_lowest_precision() -> None:
+    model = model_of(MIXED_GRIDS + "behavior Bike { require coarse = fine }")
+    solved = solve(model, inputs(model, coarse=3, fine=Decimal("3.40")))
+    assert solved is not None
+    assert part(solved).get("fine") == Decimal("3.40")
+    assert solve(model, inputs(model, coarse=3, fine=Decimal("3.60"))) is None
+    derived = solve(model, inputs(model, fine=Decimal("3.40")))
+    assert derived is not None
+    assert part(derived).get("coarse") == 3
+
+
+def test_inputs_agree_with_implications_at_the_lowest_precision() -> None:
+    model = model_of(MIXED_GRIDS + "behavior Bike { imply fine = coarse }")
+    solved = solve(model, inputs(model, coarse=3, fine=Decimal("3.40")))
+    assert solved is not None
+    assert part(solved).get("fine") == Decimal("3.40")
+    assert solve(model, inputs(model, coarse=3, fine=Decimal("3.60"))) is None
+
+
+def test_the_most_precise_implication_gives_the_value() -> None:
+    model = model_of(
+        MIXED_GRIDS
+        + """
+behavior Bike {
+    imply fine = coarse
+    imply fine = other
+}
+"""
+    )
+    solved = solve(model, inputs(model, coarse=3, other=Decimal("3.40")))
+    assert solved is not None
+    assert part(solved).get("fine") == Decimal("3.40")
+    assert solve(model, inputs(model, coarse=3, other=Decimal("3.60"))) is None
+    alone = solve(model, inputs(model, coarse=3))
+    assert alone is not None
+    assert part(alone).get("fine") == 3
+
+
+def test_faulting_implications_fail_while_other_operands_are_open() -> None:
+    model = model_of(
+        """
+product { Bike bike }
+structure Bike {
+    num n
+    num x
+    num y
+}
+behavior Bike {
+    imply y = (1 / n) + x
+}
+"""
+    )
+    assert solve(model, inputs(model, n=0)) is None
+    assert solve(model, inputs(model, n=1)) is not None
+
+
+def test_formulas_over_absent_values_are_not_defined() -> None:
+    model = model_of(
+        """
+product { Bike bike }
+structure Bike {
+    0..1 num z
+}
+behavior Bike {
+    require z + 1
+}
+"""
+    )
+    assert solve(model) is None
+    assert solve(model, inputs(model, z=1)) is not None
+
+
 # Defaults
+
+
+def test_defaults_keep_their_role_next_to_implications() -> None:
+    model = model_of(
+        """
+product { Bike bike }
+structure Bike {
+    bool flag
+    num x
+}
+behavior Bike {
+    default flag = true
+    default x = 3
+}
+behavior Bike {
+    condition flag
+    imply x = 3
+}
+"""
+    )
+    solved = solve(model)
+    assert solved is not None
+    assert part(solved).get("flag") is True
+    assert part(solved).assignment("x").role is Role.DEFAULT  # type: ignore[union-attr]
 
 
 def test_defaults_yield_to_selections() -> None:

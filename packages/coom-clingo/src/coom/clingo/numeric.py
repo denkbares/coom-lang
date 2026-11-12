@@ -1,8 +1,8 @@
 """The propagator that owns numbers and texts.
 
-The encoding decides structure, options, truth values and which producers are on. This module computes the values
+The encoding decides structure, options, truth values and which producers are active. This module computes the values
 of numeric and text slots as the least fixpoint of the valued producers, using the exact arithmetic of the evaluate
-module, and decides every atom that depends on a value: whether a producer that is on has a value, the outcome of the
+module, and decides every atom that depends on a value: whether an active producer has a value, the outcome of the
 comparisons the encoding leaves to it, and whether a text is blank. A failing computation is excluded by a nogood
 over its dependency cone, the literals of everything the computation may read, found by walking its paths through the
 potential instances.
@@ -21,7 +21,7 @@ from clingo.propagator import Propagator as ClingoPropagator
 from coom.clingo.facts import ROOT, Encoding, Leaf, Producer, value_term
 from coom.configuration import Configuration, Instance, Role, Truth
 from coom.configuration.arithmetic import to_decimal, to_grid
-from coom.configuration.evaluate import Undefined, evaluate, truth
+from coom.configuration.evaluate import Undefined, compare, evaluate, precision, truth
 from coom.model import (
     And,
     AttributeStep,
@@ -29,6 +29,7 @@ from coom.model import (
     Boolean,
     Call,
     Compare,
+    CompareOp,
     Condition,
     Constant,
     ConstantValue,
@@ -78,12 +79,15 @@ class Dependencies:
         self.targets: dict[Key, tuple[Symbol, ...]] = {}
         self.reads: dict[Key, frozenset[Symbol]] = {}
         self.writers: dict[Symbol, list[Key]] = {}
+        self.precision: dict[Key, int] = {}
+        """The digits at which the value of a producer counts, the fewer of its formula and its target."""
         self._local: dict[Key, _Local] = {}
         for producer in encoding.producers.values():
             for origin in self.universe.of_structure.get(producer.origin, ()):
                 key = (producer.id, origin)
-                on, valued = atom("on", _number(producer.id), origin), atom("valued", _number(producer.id), origin)
-                local = _Local({on, valued, atom("exists", origin)})
+                active = atom("active", _number(producer.id), origin)
+                valued = atom("valued", _number(producer.id), origin)
+                local = _Local({active, valued, atom("exists", origin)})
                 targets: set[Symbol] = set()
                 self._walk(producer.target, producer.origin, origin, local, targets)
                 for slot in targets:
@@ -91,6 +95,7 @@ class Dependencies:
                     self.writers.setdefault(slot, []).append(key)
                 self._formula(producer.formula, producer.origin, origin, local)
                 self.producers.append(key)
+                self.precision[key] = _precision(producer)
                 self.targets[key] = tuple(sorted(targets))
                 self.reads[key] = frozenset(local.reads)
                 self._local[key] = local
@@ -323,48 +328,69 @@ def _fixpoint(
         if instance is not None:
             instance.set(info.feature, value, info.index, role=Role.SELECTED)
             candidate.writers[slot] = None
-    keys = dependencies.producers if only is None else [key for key in dependencies.producers if key in set(only)]
-    on = [key for key in keys if view(atom("on", _number(key[0]), key[1]))]
-    pending = [key for key in on if view(atom("valued", _number(key[0]), key[1]))]
-    progress = True
-    while pending and progress:
+    keys = dependencies.producers
+    if only is not None:
+        selection = set(only)
+        keys = [key for key in keys if key in selection]
+    active = [key for key in keys if view(atom("active", _number(key[0]), key[1]))]
+    valued = [key for key in active if view(atom("valued", _number(key[0]), key[1]))]
+    pending = valued
+    # a producer yields to more precise writers of its slots, when nothing moves only to those that have their operands
+    stuck = False
+    while pending:
         progress = False
-        waiting = []
-        for key in pending:
+        blocked = {
+            key
+            for key in pending
             if any(
                 view(atom("defined", slot)) and candidate.value(slot, encoding) is None
                 for slot in dependencies.reads[key]
-            ):
+            )
+        }
+        rivals = [key for key in pending if key not in blocked] if stuck else pending
+        waiting = []
+        for key in pending:
+            if key in blocked or _yields(candidate, encoding, dependencies, view, key, rivals):
                 waiting.append(key)
-                continue
-            if _produce(candidate, encoding, dependencies, view, key):
+            elif _produce(candidate, encoding, dependencies, view, key):
                 progress = True
             else:
                 waiting.append(key)
         pending = waiting
+        if not progress and stuck:
+            break
+        stuck = not progress
     for key in pending:
-        candidate.failures.append(Failure("a valued producer has no value", (key,)))
+        candidate.failures.append(Failure("a valued producer has no value", (key,), _written(dependencies, view, key)))
     if pending:
         return
-    # a producer that is on but not valued must have no value, and an active formula must not fault
-    for key in on:
-        if view(atom("valued", _number(key[0]), key[1])):
-            continue
+    for key in active:
+        producer = encoding.producers[key[0]]
         origin = candidate.instances.get(key[1])
-        result = None if origin is None else evaluate(encoding.producers[key[0]].formula, origin)
+        if origin is None:
+            continue
+        if view(atom("valued", _number(key[0]), key[1])):
+            # every writer of a slot agrees with its value at the lowest precision of the two
+            agrees = compare(CompareOp.EQ, PathAccess(producer.target), producer.formula, origin)
+            if not agrees.may_be_true:
+                slots = _written(dependencies, view, key)
+                candidate.failures.append(Failure(f"two values for {producer.target}", (key,), slots))
+            continue
+        # an active producer without a value must have none, and its formula must not fault
+        result = evaluate(producer.formula, origin)
         if result in (Undefined.FAULT, Undefined.EXCEEDED):
             candidate.failures.append(Failure("the formula of an active producer has no value", (key,)))
         elif isinstance(result, Fraction | str):
             candidate.failures.append(Failure("a producer with a value is not valued", (key,)))
-    for slot, writer in candidate.writers.items():
+    for slot in candidate.writers:
         info = universe.slots[slot]
         type_ = info.feature.type
         value = candidate.value(slot, encoding)
         if not isinstance(type_, Numerical) or value is None:
             continue
         if (type_.min is not None and value < type_.min) or (type_.max is not None and value > type_.max):
-            blame = () if writer is None else (writer,)
-            candidate.failures.append(Failure(f"{value} is outside the range of {info.feature.qualified_name}", blame))
+            message = f"{value} is outside the range of {info.feature.qualified_name}"
+            candidate.failures.append(Failure(message, (), (slot,)))
     if only is None:
         for slot in universe.slots:
             if view(atom("defined", slot)) and slot not in candidate.writers:
@@ -398,11 +424,41 @@ def _produce(candidate: Candidate, encoding: Encoding, dependencies: Dependencie
         elif previous is None:
             instance.set(info.feature, stored, info.index, role=role)
             candidate.writers[slot] = key
-        elif previous.value != stored:
-            writer = candidate.writers.get(slot)
-            blame = (key,) if writer is None else (key, writer)
-            candidate.failures.append(Failure(f"two values for {info.feature.qualified_name}", blame))
+        elif previous.role is Role.COMPLETION and role is Role.DEFAULT:
+            # the slot keeps its value, which the fixpoint checks every writer against, and takes the stronger role
+            instance.set(info.feature, previous.value, info.index, role=role)
     return True
+
+
+def _written(dependencies: Dependencies, view: View, key: Key) -> tuple[Symbol, ...]:
+    """The slots a producer writes in the assignment."""
+    target = _number(dependencies.encoding.producers[key[0]].target_id)
+    return tuple(slot for slot in dependencies.targets[key] if view(atom("target", target, key[1], slot)))
+
+
+def _yields(
+    candidate: Candidate, encoding: Encoding, dependencies: Dependencies, view: View, key: Key, pending: Iterable[Key]
+) -> bool:
+    """Whether a producer waits for a more precise one that writes one of its slots.
+
+    The most precise writer gives a slot its value, so that the value does not depend on the order of the writers.
+    """
+    slots = [slot for slot in _written(dependencies, view, key) if candidate.value(slot, encoding) is None]
+    if not slots:
+        return False
+    return any(
+        dependencies.precision[other] > dependencies.precision[key]
+        and not set(slots).isdisjoint(_written(dependencies, view, other))
+        for other in pending
+    )
+
+
+def _precision(producer: Producer) -> int:
+    """The digits at which the value of a producer counts, the fewer of its formula and its target."""
+    type_ = producer.target.type
+    digits = type_.digits if isinstance(type_, Numerical) else 0
+    own = precision(producer.formula)
+    return digits if own is None else min(own, digits)
 
 
 def _stored_form(type_: object, value: Fraction | str) -> ConstantValue | None:
@@ -447,7 +503,7 @@ class Propagator(ClingoPropagator):
 
     def init(self, init: PropagateInit) -> None:
         signatures = (
-            ("exists", 1), ("value", 2), ("defined", 1), ("on", 2), ("valued", 2), ("target", 3), ("ready", 2),
+            ("exists", 1), ("value", 2), ("defined", 1), ("active", 2), ("valued", 2), ("target", 3), ("ready", 2),
             ("truth", 3), ("blank", 1), ("applied", 2), ("input", 1), ("input", 2),
         )  # fmt: skip
         for name, arity in signatures:
@@ -554,9 +610,16 @@ class Propagator(ClingoPropagator):
         self.accepted = frozenset(symbol for symbol, literal in self._literals.items() if assignment.is_true(literal))
 
     def _expected(self, view: View, key: Key, origin: Instance) -> str | None:
-        """The outcome atom a leaf must take, where only an indefinite outcome is known before it is ready."""
-        expected = outcome(self.encoding.leaves[key[0]], origin)
+        """The outcome atom a leaf must take.
+
+        Before a leaf is ready only two outcomes are known. A fault makes it indefinite, and a definedness test is
+        false over an absent value.
+        """
+        leaf = self.encoding.leaves[key[0]]
+        expected = outcome(leaf, origin)
         if view(atom("ready", _number(key[0]), key[1])) or expected == "indefinite":
+            return expected
+        if expected == "false" and isinstance(leaf.node, IsDefined):
             return expected
         return None
 

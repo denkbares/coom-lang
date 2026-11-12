@@ -4,6 +4,7 @@
 % open(C,O) while it waits for a value. An indefinite condition is neither true nor false in any completion.
 %   discrete_compare(C,Op,L,R)  comparison of discrete values (options, truth values, instances), decided here
 %   leaf(C)                     comparison or definedness test over numbers or texts, decided by the propagator
+%   definedness_test(C)         the leaf tests whether a formula has a value
 %   is_defined(X,P)             a bare path read as a condition
 %   negation(X,A), and(X) with and(X,Y), or(X) with or(X,Y), constant(X,b(true)) and constant(X,b(false))
 %
@@ -11,6 +12,7 @@
 
 #defined discrete_compare/4.
 #defined leaf/1.
+#defined definedness_test/1.
 #defined is_defined/2.
 #defined negation/2.
 #defined and/1.
@@ -51,10 +53,12 @@ truth(C,O,true) :- discrete_compare(C,_,_,_), at(C,O), not open(C,O), not truth(
 % Numeric and text leaves. Their outcome is a free choice, which the propagator fixes to the outcome of the
 % evaluation. True and false need the operands to be ready, which requires their definedness, so a value cannot
 % justify a guard that produces it. Indefinite needs no readiness, since a fault is known before every operand is
-% there and an indefinite outcome can only block a guard or fail a requirement.
+% there and an indefinite outcome can only block a guard or fail a requirement. A definedness test is false over an
+% absent value, which needs no readiness either.
 ready(C,O) :- leaf(C), at(C,O), ready(Y,O) : operand(C,Y).
 { truth(C,O,true); truth(C,O,false) } :- leaf(C), ready(C,O).
 { truth(C,O,indefinite) } :- leaf(C), at(C,O).
+{ truth(C,O,false) } :- definedness_test(C), at(C,O).
 open(C,O) :- leaf(C), at(C,O), not truth(C,O,true), not truth(C,O,false), not truth(C,O,indefinite).
 
 % A bare path holds if it addresses a truthy value. It stays open while a required numeric slot waits. Whether a

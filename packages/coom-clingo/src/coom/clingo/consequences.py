@@ -27,7 +27,7 @@ def apply(
     """Raises the role of every value of the configuration that is a consequence to consequence.
 
     The configuration is the one of the first model, given by its atoms, and cautious are the atoms true in every model
-    among exists, value, absent, undefined, on and applied. Selected values keep their role.
+    among exists, value, absent, undefined, active and applied. Selected values keep their role.
     """
     instances = _instances(configuration, encoding)
     selected = set()
@@ -117,7 +117,11 @@ class _Fixed:
         """Whether a producer writes the same value into the slot in every model."""
         producer = self.encoding.producers[key[0]]
         origin = key[1]
-        if atom("on", Number(producer.id), origin) not in self.cautious:
+        if atom("active", Number(producer.id), origin) not in self.cautious:
+            return False
+        # a more precise writer would replace the value in the models where it is valued
+        precision = self.dependencies.precision
+        if any(precision[other] > precision[key] for other in self._writers.get(slot, ())):
             return False
         # whether an active producer has a value and which slots it writes follows from what it reads, so both are
         # the same in every model once everything it reads is

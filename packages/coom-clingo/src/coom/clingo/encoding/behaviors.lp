@@ -27,10 +27,9 @@ assigned(A,O,W) :- assign(A,_,_,T,V), path_kind(T,discrete), active(A,O), path_v
 exists(X) :- assigned(A,O,_), assign(A,_,_,T,_), target(T,O,X).
 :- assigned(A,O,W), assign(A,_,_,T,_), target(T,O,X), not value(X,W).
 
-% A numeric or text assign is on once its formula is ready. Readiness is necessary for a value but not sufficient,
-% an aggregate over nothing has none. The propagator decides valued(A,O) by evaluating the formula, and only valued
-% assigns define their target slots. Every defined value is therefore founded on the definedness of what its formula
-% reads.
-on(A,O) :- active(A,O), assign(A,_,_,T,X), path_kind(T,numeric), ready(X,O).
-{ valued(A,O) } :- on(A,O).
+% A numeric or text assign can hold a value once its formula is ready. Readiness is necessary for a value but not
+% sufficient, an aggregate over nothing has none. The propagator decides valued(A,O) by evaluating the formula, and
+% only valued assigns define their target slots. Every defined value is therefore founded on the definedness of what
+% its formula reads.
+{ valued(A,O) } :- active(A,O), assign(A,_,_,T,X), path_kind(T,numeric), ready(X,O).
 defined(Y) :- valued(A,O), assign(A,_,_,T,_), target(T,O,Y).

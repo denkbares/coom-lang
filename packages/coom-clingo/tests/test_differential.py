@@ -9,7 +9,7 @@ from brute_force import canonical, configurations
 from model_generator import case
 
 from coom.clingo.solver import ClingoSolver
-from coom.configuration import verdicts
+from coom.configuration import Configuration, Role, verdicts
 
 SEEDS = range(200)
 
@@ -36,3 +36,17 @@ def test_solved_configurations_pass_the_oracle(seed: int) -> None:
         return
     broken = [verdict for verdict in verdicts(solved) if verdict.is_hard and not verdict.truth.may_be_true]
     assert not broken, f"seed {seed}\n{example.text}\n{broken}"
+    assert _slots(solved, selected=True) == _slots(example.inputs), f"seed {seed}\n{example.text}"
+
+
+def _slots(configuration: Configuration | None, *, selected: bool = False) -> set[tuple[str, str, int]]:
+    """The slots a configuration holds, or only those whose value is selected."""
+    if configuration is None:
+        return set()
+    return {
+        (instance.path, feature.name, index)
+        for instance in configuration.instances()
+        for feature in instance.type.features
+        for index, assignment in instance.assignments(feature).items()
+        if not selected or assignment.role is Role.SELECTED
+    }

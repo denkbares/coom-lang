@@ -375,6 +375,7 @@ class Encoding:
                 self._fact("is_defined", id, self._formula(access, origin))
             case IsDefined():
                 self._leaf(id, condition, origin, self._formula(condition.formula, origin))
+                self._fact("definedness_test", id)
             case Not():
                 self._fact("negation", id, self._condition(condition.operand, origin))
             case And():

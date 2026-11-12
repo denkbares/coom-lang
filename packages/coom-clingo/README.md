@@ -32,7 +32,8 @@ nesting will be slow.
 | `enumerate` | all completions of the inputs, ignoring defaults |
 | `feasible` | the options or truth values some completion holds in a slot |
 
-`coom.clingo.testrun` runs the `test` blocks of a model against these operations.
+In a solved configuration, values held in every completion of the inputs take the role consequence unless they are
+selected. `coom.clingo.testrun` runs the `test` blocks of a model against these operations.
 
 ## Limitations
 
@@ -52,7 +53,6 @@ Ignored with a warning
 
 Not supported by the operations or the test runner
 
-- Consequences, so `isFixed` steps are skipped.
 - Optimization and explanations of conflicts.
 - Tests of structures other than the product.
 
@@ -65,12 +65,19 @@ Semantic differences to the language specification
 - A numeric value is only ever produced by an input, an implication, an applied default or an equality in a
   requirement with a bare path on one side. The solver never searches for numbers, so a requirement such as
   `x * x = 4` leaves `x` open.
-- A bare text path counts as true even if the text is blank.
+- Only `solve` applies defaults. If a slot can only get its value from a default, `solve` may find a configuration
+  where `satisfiable`, `enumerate` and `feasible` find none.
+- Where several statements write one numeric slot, the one whose value counts at the most digits gives the value.
+  The others only have to agree with it at the lowest precision of both sides, as an input does.
+- A computed number or text is a consequence only if some producer of it writes it in every completion from values
+  that are the same in every completion. Different producers that compute the same value in different completions do
+  not make it a consequence.
 
 ## Open points
 
 - The exact meaning of maximal default application, in particular whether a default may force its own condition.
   Defaults stay greedy until this is defined.
-- Consequences and the roles that depend on them.
+- Whether a condition may hold through the absence of a value it produces. The solver says no, so with
+  `condition z || !z imply y = 3` and `imply z = y` there is no configuration.
 - Unbounded cardinalities through incremental grounding.
 - Optimization statements and explanations.

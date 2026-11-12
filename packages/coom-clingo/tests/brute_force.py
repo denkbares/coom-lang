@@ -2,7 +2,9 @@
 
 Discrete choices are enumerated exhaustively: which optional instances and discrete slots exist, filled from the front,
 and which option or truth value each holds. Numbers and texts come from the inputs and from producers, the numeric and
-text implies and the requires that equate a bare path with a formula. Defaults are ignored.
+text implies and the requires that equate a bare path with a formula. Where several producers write one slot, the one
+whose value counts at the most digits gives the value, and the verdicts decide whether the others agree with it.
+Defaults are ignored.
 
 A candidate is valid if its values are founded and every hard behavior may still be true. Founded means that a fixpoint
 reproduces them in which a producer fires only when its preconditions are definitely true both in the values derived
@@ -25,7 +27,7 @@ from typing import Any
 
 from coom.configuration import Assignment, Configuration, Instance, Truth, truth, verdicts
 from coom.configuration.arithmetic import to_decimal, to_grid
-from coom.configuration.evaluate import Undefined, evaluate
+from coom.configuration.evaluate import Undefined, evaluate, precision
 from coom.model import (
     Behavior,
     Boolean,
@@ -234,11 +236,15 @@ def _stored(feature: Feature, value: object) -> object | None:
 def _values(
     model: Model, alternative: Alternative, given: dict[Slot, Any], chosen: Sequence[tuple[Producer, Key]]
 ) -> dict[Slot, Any] | None:
-    """The values the chosen producers write, all of them holding a value, None if they do not or conflict."""
+    """The values the chosen producers write, all of them holding a value, None if they do not.
+
+    An input keeps its slot. Otherwise the most precise producer of a slot gives its value.
+    """
     values: dict[Slot, Any] = {}
     for _ in range(len(chosen) + 2):
         configuration = _candidate(model, alternative, given, values)
         following: dict[Slot, Any] = {}
+        digits: dict[Slot, int] = {}
         for producer, key in chosen:
             origin = _at(configuration, key)
             assert origin is not None
@@ -246,11 +252,11 @@ def _values(
             if slot is None:
                 return None
             stored = _stored(slot[1], evaluate(producer.formula, origin))
-            if stored is None:
+            if stored is None or slot in given:
                 continue
-            if following.get(slot, stored) != stored or given.get(slot, stored) != stored:
-                return None
-            following[slot] = stored
+            if slot not in following or _digits(producer) > digits[slot]:
+                following[slot] = stored
+                digits[slot] = _digits(producer)
         if following == values:
             break
         values = following
@@ -263,6 +269,14 @@ def _values(
         if _stored(_feature(producer), evaluate(producer.formula, origin)) is None:
             return None
     return {slot: value for slot, value in values.items() if slot not in given}
+
+
+def _digits(producer: Producer) -> int:
+    """The digits at which the value of a producer counts, the fewer of its formula and its target."""
+    type_ = _feature(producer).type
+    target = type_.digits if isinstance(type_, Numerical) else 0
+    own = precision(producer.formula)
+    return target if own is None else min(own, target)
 
 
 def _feature(producer: Producer) -> Feature:
@@ -309,6 +323,7 @@ def _founded(
     candidate: Configuration,
 ) -> bool:
     derived: dict[Slot, Any] = dict(given)
+    final_numbers = _numbers(candidate)
     fired: set[tuple[Producer, Key]] = set()
     changed = True
     while changed:
@@ -330,12 +345,14 @@ def _founded(
             if slot is None:
                 continue
             stored = _stored(slot[1], value)
-            if stored is None or derived.get(slot, stored) != stored:
+            if stored is None or slot not in final_numbers:
                 return False
-            derived[slot] = stored
+            # a producer that only agrees with the value of its slot at a lower precision does not derive it
+            if stored == final_numbers[slot]:
+                derived[slot] = stored
             fired.add(item)
             changed = True
-    return derived == _numbers(candidate)
+    return derived == final_numbers
 
 
 def _valid(candidate: Configuration, origins: list[tuple[Producer, Key]]) -> bool:
