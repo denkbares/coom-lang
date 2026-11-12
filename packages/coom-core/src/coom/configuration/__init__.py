@@ -7,11 +7,13 @@ stored as decimals on the grid of their feature, rounded half away from zero whe
 values and texts are stored as the Option, bool and str objects of the model.
 
 The evaluate module decides the truth of conditions and behaviors in a configuration, and the arithmetic module
-defines the exact calculation both rely on. Their main entry points are re-exported here.
+defines the exact calculation both rely on. The visibility module says which values a user interface hides or locks.
+Their main entry points are re-exported here.
 """
 
 from coom.configuration._configuration import Assignment, Configuration, Instance, Role, Value
 from coom.configuration.evaluate import Truth, Verdict, truth, verdicts
+from coom.configuration.visibility import Visibilities, visibilities
 
 __all__ = [
     "Assignment",
@@ -21,6 +23,8 @@ __all__ = [
     "Truth",
     "Value",
     "Verdict",
+    "Visibilities",
     "truth",
     "verdicts",
+    "visibilities",
 ]
