@@ -1,0 +1,33 @@
+// A read only value stays shown, a hidden feature stays shown while the condition of the hide is false. Hiding
+// reaches nested slots, counts as read only and does not depend on the value.
+
+test {
+    isShown touringBike.color = Black
+    set touringBike.color = Silver
+    isShown touringBike.color = Silver
+}
+
+test {
+    set touringBike.usage = City
+    set touringBike.lights = true
+    set touringBike.rack.panniers = true
+    isShown touringBike.lights = true
+    isShown touringBike.rack.panniers = true
+    set touringBike.usage = Race
+    isEmpty touringBike.rack.color
+    set touringBike.usage = City
+    isShown touringBike.rack.panniers = true
+}
+
+test {
+    isReadonly touringBike.color
+    isHidden touringBike.rack.color = Silver
+    set touringBike.usage = Race
+    isHidden touringBike.lights
+    isHidden touringBike.rack
+    isHidden touringBike.rack.panniers
+    isReadonly touringBike.rack.panniers
+    isReadonly touringBike.color
+    set touringBike.lights = true
+    isHidden touringBike.lights
+}

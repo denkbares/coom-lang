@@ -1,0 +1,23 @@
+// A copy cycle stays open until an input seeds it.
+
+test {
+    isEmpty pressureBike.frontPressure
+    isEmpty pressureBike.rearPressure
+    set pressureBike.frontPressure = 3
+    isFixed pressureBike.rearPressure = 3
+    isShown pressureBike.rearPressure = 3
+    reset pressureBike.frontPressure
+    isEmpty pressureBike.frontPressure
+    isEmpty pressureBike.rearPressure
+    set pressureBike.rearPressure = 4
+    isFixed pressureBike.frontPressure = 4
+}
+
+test {
+    set pressureBike.frontPressure = 3
+    isBlocked pressureBike.rearPressure = 4
+    isAvailable pressureBike.rearPressure = 3
+    isAvailable pressureBike.frontPressure = 4
+    set pressureBike.rearPressure = 3
+    isBlocked pressureBike.frontPressure = 4
+}

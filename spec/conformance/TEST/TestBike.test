@@ -1,0 +1,58 @@
+// Every step kind of the test syntax, with defines, indices, decimal values and instances set or checked without a
+// value.
+
+test {
+    define tall = 185.5
+    set testBike.height = tall
+    isFixed testBike.height = 185.5
+    isShown testBike.height = tall
+    isFixed testBike.size = L
+    remove testBike.height
+    isEmpty testBike.height
+    isAvailable testBike.size = S
+    set testBike.height = 172.4
+    isFixed testBike.height = 172.4
+    isAvailable testBike.size = S
+    isAvailable testBike.size = L
+    set testBike.height = 160.0
+    isBlocked testBike.size = M
+    isFixed testBike.size = S
+    reset testBike.height
+    isEmpty testBike.size
+}
+
+test {
+    set testBike.bottles[1]
+    isShown testBike.bottles[1]
+    isFixed testBike.bottles[1]
+    isEmpty testBike.bottles[1].volume
+    set testBike.bottles[0].volume = large
+    isShown testBike.bottles[0].volume = large
+    isBlocked testBike.size = S
+    remove testBike.bottles[1]
+    isAvailable testBike.size = S
+}
+
+test {
+    set testBike.size = S
+    set testBike.bottles[0]
+    isBlocked testBike.bottles[1]
+    isAvailable testBike.bottles[0]
+    isBlocked testBike.height = 185.5
+    isAvailable testBike.height = 150
+    isReadonly testBike.size
+    set testBike.height = 150
+    isHidden testBike.size
+    isReadonly testBike.size
+}
+
+test {
+    set testBike.bottles[0]
+    set testBike.bottles[1]
+    isBlocked testBike.height = 160.5
+    isAvailable testBike.height = 172.4
+    set testBike.height = 185.5
+    isHidden testBike.bottles[0].volume = small
+    isReadonly testBike.bottles[0].volume
+    isAvailable testBike.bottles[0].volume = small
+}

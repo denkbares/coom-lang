@@ -1,0 +1,12 @@
+// An implication whose formula faults cannot hold, so the option that causes the fault is excluded.
+
+test {
+    isBlocked gearBike.gear = Fixed
+    isAvailable gearBike.gear = Low
+    isAvailable gearBike.gear = High
+    set gearBike.gear = High
+    isFixed gearBike.cadence = 30
+    remove gearBike.gear
+    set gearBike.cadence = 60
+    isFixed gearBike.gear = Low
+}

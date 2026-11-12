@@ -1,0 +1,31 @@
+product {
+    RackBike rackBike
+}
+
+structure RackBike {
+    Rack       rack
+    0..2 Bag   bags
+    num        bagCount
+    num /kg    bagWeight
+    num /kg    heaviestBag
+}
+
+structure Bag {
+    num /kg weight
+}
+
+enumeration Rack {
+    attribute num slots
+
+    None  = ( 0 )
+    Small = ( 1 )
+    Large = ( 2 )
+}
+
+behavior RackBike {
+    require count(bags) <= rack.slots
+
+    imply bagCount = count(bags)
+    imply bagWeight = sum(bags.weight)
+    imply heaviestBag = max(bags.weight)
+}

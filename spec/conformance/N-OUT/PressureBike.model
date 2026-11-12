@@ -1,0 +1,14 @@
+product {
+    PressureBike pressureBike
+}
+
+structure PressureBike {
+    num /bar frontPressure
+    num /bar rearPressure
+}
+
+// The two implications copy each value into the other, neither produces a value by itself.
+behavior PressureBike {
+    imply frontPressure = rearPressure
+    imply rearPressure = frontPressure
+}

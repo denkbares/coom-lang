@@ -1,0 +1,22 @@
+product {
+    PaintBike paintBike
+}
+
+structure PaintBike {
+    Frame frame
+    Color color
+}
+
+enumeration Frame { Steel; Carbon }
+
+enumeration Color { White; Black; Red }
+
+behavior PaintBike {
+    default/5 frame = Carbon
+    default   color = White
+}
+
+behavior PaintBike {
+    combinations ( frame   color )
+    forbid       ( Carbon  White )
+}

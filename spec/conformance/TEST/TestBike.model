@@ -1,0 +1,43 @@
+product {
+    TestBike testBike
+}
+
+structure TestBike {
+    Size      size
+    num.# /cm height
+    0..2 Bottle bottles
+}
+
+structure Bottle {
+    Volume volume
+}
+
+enumeration Size { S; M; L }
+
+enumeration Volume { small; large }
+
+behavior TestBike {
+    condition height < 165
+    require size = S
+
+    condition height > 180
+    require size = L
+}
+
+behavior TestBike {
+    require count(bottles) < 2 || size != S
+}
+
+behavior TestBike {
+    readonly size
+
+    condition height < 165
+    hide size
+}
+
+behavior TestBike {
+    condition height > 180 {
+        readonly bottles
+        hide bottles.volume small
+    }
+}

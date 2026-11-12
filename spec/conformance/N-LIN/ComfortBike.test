@@ -1,0 +1,50 @@
+// The rider weight and the bag sizes decide the suspension through linear constraints on the total weight.
+
+test {
+    isAvailable comfortBike.suspension = s1
+    isAvailable comfortBike.suspension = s2
+    isShown comfortBike.riderWeight = 100
+    set comfortBike.riderWeight = 115
+    isBlocked comfortBike.suspension = s1
+    isFixed comfortBike.suspension = s2
+    isBlocked comfortBike.frontBag = large
+    isAvailable comfortBike.frontBag = medium
+    isBlocked comfortBike.rearBag = large
+    isAvailable comfortBike.rearBag = medium
+    set comfortBike.rearBag = medium
+    isFixed comfortBike.frontBag = small
+    isFixed comfortBike.totalWeight = 135
+}
+
+test {
+    set comfortBike.riderWeight = 100
+    isAvailable comfortBike.suspension = s1
+    isAvailable comfortBike.suspension = s2
+    set comfortBike.suspension = s1
+    isBlocked comfortBike.frontBag = large
+    isBlocked comfortBike.rearBag = large
+    isAvailable comfortBike.frontBag = medium
+    set comfortBike.rearBag = medium
+    isFixed comfortBike.frontBag = small
+    isFixed comfortBike.totalWeight = 120
+}
+
+test {
+    set comfortBike.totalWeight = 130
+    isAvailable comfortBike.frontBag = large
+    set comfortBike.riderWeight = 115
+    isFixed comfortBike.frontBag = small
+    isFixed comfortBike.rearBag = small
+    isFixed comfortBike.suspension = s2
+}
+
+test {
+    isBlocked comfortBike.riderWeight = 130
+    isAvailable comfortBike.riderWeight = 120
+    set comfortBike.riderWeight = 115
+    isBlocked comfortBike.riderWeight = 130
+    set comfortBike.rearBag = medium
+    isBlocked comfortBike.riderWeight = 120
+    isAvailable comfortBike.riderWeight = 110
+    isBlocked comfortBike.totalWeight = 150
+}

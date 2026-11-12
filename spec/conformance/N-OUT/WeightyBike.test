@@ -1,0 +1,28 @@
+// Implications compute the weights from the wheel size, a constant one holds from the start.
+
+test {
+    isFixed weightyBike.weights.frameWeight = 10000
+    isShown weightyBike.weights.frameWeight = 10000
+    isEmpty weightyBike.weights.wheelWeight
+    isEmpty weightyBike.weights.totalWeight
+    set weightyBike.wheelSize = W20
+    isFixed weightyBike.weights.wheelWeight = 1300
+    isFixed weightyBike.weights.totalWeight = 11300
+    isShown weightyBike.weights.totalWeight = 11300
+    set weightyBike.wheelSize = W14
+    isFixed weightyBike.weights.wheelWeight = 1100
+    isFixed weightyBike.weights.totalWeight = 11100
+    remove weightyBike.wheelSize
+    isEmpty weightyBike.weights.totalWeight
+    isFixed weightyBike.weights.frameWeight = 10000
+}
+
+test {
+    set weightyBike.weights.totalWeight = 11100
+    isAvailable weightyBike.wheelSize = W14
+    isAvailable weightyBike.wheelSize = W16
+    isBlocked weightyBike.wheelSize = W18
+    isBlocked weightyBike.wheelSize = W28
+    set weightyBike.wheelSize = W16
+    isFixed weightyBike.weights.wheelWeight = 1100
+}

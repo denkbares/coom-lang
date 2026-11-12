@@ -1,0 +1,28 @@
+// The tangent of the seat tube angle in degrees decides which top tube bags fit.
+
+test {
+    isAvailable sundayBike.topTubeBag = long
+    isShown sundayBike.reach = 470
+    isShown sundayBike.stack = 600
+    isShown sundayBike.seatTubeAngle = 73
+    set sundayBike.reach = 470
+    set sundayBike.stack = 600
+    set sundayBike.seatTubeAngle = 73
+    isFixed sundayBike.effectiveTopTubeLength = 653
+    isAvailable sundayBike.topTubeBag = short
+    isAvailable sundayBike.topTubeBag = middle
+    isBlocked sundayBike.topTubeBag = long
+    set sundayBike.seatTubeAngle = 76
+    isFixed sundayBike.effectiveTopTubeLength = 620
+    isBlocked sundayBike.topTubeBag = middle
+    isFixed sundayBike.topTubeBag = short
+}
+
+test {
+    set sundayBike.topTubeBag = long
+    set sundayBike.seatTubeAngle = 70
+    set sundayBike.reach = 470
+    set sundayBike.stack = 600
+    isFixed sundayBike.effectiveTopTubeLength = 688
+    isFixed sundayBike.topTubeBag = long
+}

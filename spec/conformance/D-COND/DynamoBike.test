@@ -1,0 +1,10 @@
+// A conditional default displaces an unconditional one for the same feature while its condition holds.
+
+test {
+    set dynamoBike.dynamo = true
+    isShown dynamoBike.light = Led
+    set dynamoBike.dynamo = false
+    isShown dynamoBike.light = Halogen
+    set dynamoBike.light = Led
+    isShown dynamoBike.light = Led
+}

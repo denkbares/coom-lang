@@ -1,0 +1,27 @@
+// Aggregates over no bags count zero and sum to zero, while the maximum has no value.
+
+test {
+    set rackBike.rack = None
+    isFixed rackBike.bagCount = 0
+    isFixed rackBike.bagWeight = 0
+    isEmpty rackBike.heaviestBag
+}
+
+test {
+    set rackBike.bags[0].weight = 5
+    isBlocked rackBike.rack = None
+    isAvailable rackBike.rack = Small
+    set rackBike.bags[1].weight = 7
+    isBlocked rackBike.rack = Small
+    isFixed rackBike.rack = Large
+    isFixed rackBike.bagCount = 2
+    isFixed rackBike.bagWeight = 12
+    isFixed rackBike.heaviestBag = 7
+}
+
+test {
+    set rackBike.rack = Small
+    set rackBike.bags[0].weight = 4
+    isFixed rackBike.bagCount = 1
+    isFixed rackBike.heaviestBag = 4
+}

@@ -1,0 +1,65 @@
+// The table couples support wheels to small wheels, the condition on the color excludes small wheels.
+
+test {
+    isAvailable kidsBike.wheelSize = W14
+    isAvailable kidsBike.wheelSize = W20
+    isAvailable kidsBike.color = Yellow
+    isEmpty kidsBike.wheelSize
+    isEmpty kidsBike.supportWheels
+}
+
+test {
+    set kidsBike.color = Yellow
+    isShown kidsBike.color = Yellow
+    isFixed kidsBike.color = Yellow
+    isBlocked kidsBike.wheelSize = W14
+    isBlocked kidsBike.wheelSize = W16
+    isAvailable kidsBike.wheelSize = W18
+    isAvailable kidsBike.wheelSize = W20
+    isFixed kidsBike.supportWheels = false
+    isEmpty kidsBike.wheelSize
+    set kidsBike.wheelSize = W20
+    isFixed kidsBike.wheelSize = W20
+    remove kidsBike.color
+    isAvailable kidsBike.color = Red
+    isAvailable kidsBike.color = Yellow
+    isFixed kidsBike.supportWheels = false
+}
+
+test {
+    set kidsBike.supportWheels = true
+    isAvailable kidsBike.wheelSize = W14
+    isAvailable kidsBike.wheelSize = W16
+    isBlocked kidsBike.wheelSize = W18
+    isBlocked kidsBike.wheelSize = W20
+    isBlocked kidsBike.color = Yellow
+    isFixed kidsBike.color = Red
+    reset kidsBike.supportWheels
+    isAvailable kidsBike.wheelSize = W18
+    isAvailable kidsBike.color = Yellow
+    isEmpty kidsBike.color
+}
+
+test {
+    set kidsBike.wheelSize = W16
+    isFixed kidsBike.supportWheels = true
+    isFixed kidsBike.color = Red
+    set kidsBike.color = Red
+    isShown kidsBike.color = Red
+}
+
+test {
+    set kidsBike.color = Red
+    isAvailable kidsBike.wheelSize = W14
+    isAvailable kidsBike.wheelSize = W18
+    isEmpty kidsBike.supportWheels
+}
+
+test {
+    set kidsBike.color = Yellow
+    isBlocked kidsBike.supportWheels = true
+    isAvailable kidsBike.supportWheels = false
+    set kidsBike.supportWheels = false
+    isBlocked kidsBike.wheelSize = W16
+    isAvailable kidsBike.color = Red
+}

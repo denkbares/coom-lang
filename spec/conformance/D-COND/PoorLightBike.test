@@ -1,0 +1,15 @@
+// The default acts only while its condition holds.
+
+test {
+    set poorLightBike.lights = false
+    isShown poorLightBike.color = White
+    isAvailable poorLightBike.color = Red
+    set poorLightBike.color = Red
+    isShown poorLightBike.color = Red
+}
+
+test {
+    set poorLightBike.lights = true
+    isEmpty poorLightBike.color
+    isAvailable poorLightBike.color = White
+}

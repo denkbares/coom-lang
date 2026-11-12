@@ -1,0 +1,21 @@
+// The explicit priority of the frame default beats the implicit one of the color default, selections beat both.
+
+test {
+    isShown paintBike.frame = Carbon
+    isEmpty paintBike.color
+    isAvailable paintBike.color = White
+    set paintBike.frame = Steel
+    isShown paintBike.color = White
+    reset paintBike.frame
+    set paintBike.color = White
+    isFixed paintBike.frame = Steel
+    isShown paintBike.frame = Steel
+    set paintBike.color = Red
+    isShown paintBike.frame = Carbon
+}
+
+test {
+    set paintBike.frame = Carbon
+    isBlocked paintBike.color = White
+    isEmpty paintBike.color
+}

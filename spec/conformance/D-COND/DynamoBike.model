@@ -1,0 +1,18 @@
+product {
+    DynamoBike dynamoBike
+}
+
+structure DynamoBike {
+    bool      dynamo
+    LightType light
+}
+
+enumeration LightType { Halogen; Led }
+
+// The conditional default has the higher implicit priority.
+behavior DynamoBike {
+    default light = Halogen
+
+    condition dynamo = true
+    default light = Led
+}

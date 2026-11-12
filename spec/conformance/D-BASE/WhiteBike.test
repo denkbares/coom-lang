@@ -1,0 +1,12 @@
+// The default fills the color until the user selects another one.
+
+test {
+    isShown whiteBike.color = White
+    isAvailable whiteBike.color = Black
+    isAvailable whiteBike.color = Red
+    set whiteBike.color = Black
+    isShown whiteBike.color = Black
+    isFixed whiteBike.color = Black
+    remove whiteBike.color
+    isShown whiteBike.color = White
+}

@@ -1,0 +1,22 @@
+// A requirement that faults fails at once, even while its other operands are open.
+
+test {
+    isBlocked trailerBike.trailer = None
+    isAvailable trailerBike.trailer = Single
+    isAvailable trailerBike.trailer = Double
+    isEmpty trailerBike.load
+    set trailerBike.load = 45
+    isBlocked trailerBike.trailer = Single
+    isFixed trailerBike.trailer = Double
+    set trailerBike.load = 30
+    isAvailable trailerBike.trailer = Single
+    isBlocked trailerBike.trailer = None
+}
+
+test {
+    isBlocked trailerBike.load = 51
+    isAvailable trailerBike.load = 50
+    set trailerBike.trailer = Single
+    isBlocked trailerBike.load = 45
+    isAvailable trailerBike.load = 40
+}

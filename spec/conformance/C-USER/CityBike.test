@@ -1,0 +1,12 @@
+// Spoke reflectors exist only where the user adds them, each with its own type and color.
+
+test {
+    isEmpty cityBike.frontWheel.spokeReflectors[0].type
+    set cityBike.frontWheel.spokeReflectors[0].type = oval
+    isFixed cityBike.frontWheel.spokeReflectors[0].type = oval
+    isAvailable cityBike.frontWheel.spokeReflectors[0].color = Red
+    isEmpty cityBike.frontWheel.spokeReflectors[0].color
+    set cityBike.frontWheel.spokeReflectors[1].color = Blue
+    isShown cityBike.frontWheel.spokeReflectors[1].color = Blue
+    isEmpty cityBike.rearWheel.spokeReflectors[0].type
+}

@@ -1,0 +1,23 @@
+// Both front bags exist from the start and share their size, the rear bags are free.
+
+test {
+    isAvailable shoppingBike.frontBag[1].size = small
+    isEmpty shoppingBike.frontBag[1].size
+    set shoppingBike.frontBag[0].size = large
+    isFixed shoppingBike.frontBag[1].size = large
+    isBlocked shoppingBike.frontBag[1].size = small
+    isBlocked shoppingBike.frontBag[1].size = medium
+    isAvailable shoppingBike.rearBag[2].size = small
+    isEmpty shoppingBike.rearBag[2].size
+    isEmpty shoppingBike.frontBag[1].color
+    set shoppingBike.rearBag[2].color = Red
+    isAvailable shoppingBike.rearBag[1].color = Green
+    reset shoppingBike.frontBag[0].size
+    isAvailable shoppingBike.frontBag[1].size = small
+}
+
+test {
+    set shoppingBike.frontBag[1].size = medium
+    isFixed shoppingBike.frontBag[0].size = medium
+    isShown shoppingBike.frontBag[0].size = medium
+}

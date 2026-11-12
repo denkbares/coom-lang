@@ -1,0 +1,20 @@
+product {
+    GearBike gearBike
+}
+
+structure GearBike {
+    Gear    gear
+    num     cadence
+}
+
+enumeration Gear {
+    attribute num ratio
+
+    Fixed = ( 0 )
+    Low   = ( 2 )
+    High  = ( 4 )
+}
+
+behavior GearBike {
+    imply cadence = 120 / gear.ratio
+}

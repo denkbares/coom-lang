@@ -13,7 +13,9 @@ MODELS = sorted(path for path in CONFORMANCE.rglob("*.model") if "syntax" not in
 
 @pytest.mark.parametrize("path", MODELS, ids=lambda path: str(path.relative_to(CONFORMANCE)))
 def test_profile_model_compiles(path: Path) -> None:
-    result = compile_files([path])
+    # a model is compiled together with its session tests, which the TEST profile needs
+    tests = path.with_suffix(".test")
+    result = compile_files([path, tests] if tests.exists() else [path])
     assert result.ok, "\n".join(map(str, result.diagnostics))
     folder = path.relative_to(CONFORMANCE).parts[0]
     assert Profile(folder) in detect_profiles(result.model)

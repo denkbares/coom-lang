@@ -1,0 +1,21 @@
+product {
+    FrameBike frameBike
+}
+
+structure FrameBike {
+    Frame frame
+    Color color
+}
+
+enumeration Frame { Steel; Carbon }
+
+enumeration Color { White; Black; Red }
+
+behavior FrameBike {
+    default color = White
+}
+
+behavior FrameBike {
+    combinations ( frame   color )
+    forbid       ( Carbon  White )
+}

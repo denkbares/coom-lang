@@ -1,0 +1,8 @@
+// Conflicting writers exclude the guard that activates one of them.
+
+test {
+    isAvailable lampBike.mode = Eco
+    isBlocked lampBike.mode = Boost
+    isFixed lampBike.mode = Eco
+    isFixed lampBike.lumen = 200
+}

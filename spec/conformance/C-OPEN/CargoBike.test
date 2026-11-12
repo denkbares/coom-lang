@@ -1,0 +1,10 @@
+// The number of bags and the wanted weight decide the bag size, optimization is not exercised.
+
+test {
+    set cargoBike.countBags = 1
+    set cargoBike.wantedWeight = 20
+    isFixed cargoBike.bags[0].size = large
+    isFixed cargoBike.totalWeight = 25
+    isBlocked cargoBike.wantedWeight = 30
+    isBlocked cargoBike.bags[1]
+}

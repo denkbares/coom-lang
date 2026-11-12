@@ -1,0 +1,37 @@
+product {
+    TouringBike touringBike
+}
+
+structure TouringBike {
+    Usage usage
+    Color color
+    bool  lights
+    Rack  rack
+}
+
+structure Rack {
+    Color color
+    bool  panniers
+}
+
+enumeration Usage { City; Race }
+
+enumeration Color { Black; Silver }
+
+behavior TouringBike {
+    default color = Black
+    readonly color
+}
+
+// A black bike gets no silver rack, judged on the color the default completes.
+behavior TouringBike {
+    condition color = Black
+    hide rack.color Silver
+}
+
+behavior TouringBike {
+    condition usage = Race {
+        hide lights
+        hide rack
+    }
+}

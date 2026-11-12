@@ -1,0 +1,20 @@
+// A selection that excludes the value of a default displaces the default.
+
+test {
+    isShown frameBike.color = White
+    isAvailable frameBike.frame = Carbon
+    set frameBike.frame = Carbon
+    isBlocked frameBike.color = White
+    isEmpty frameBike.color
+    set frameBike.frame = Steel
+    isShown frameBike.color = White
+    remove frameBike.frame
+    set frameBike.color = Black
+    isEmpty frameBike.frame
+}
+
+test {
+    set frameBike.color = Red
+    isShown frameBike.color = Red
+    isAvailable frameBike.frame = Carbon
+}

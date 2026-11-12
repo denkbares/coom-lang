@@ -1,0 +1,22 @@
+product {
+    TrailerBike trailerBike
+}
+
+structure TrailerBike {
+    Trailer trailer
+    num /kg load
+}
+
+enumeration Trailer {
+    attribute num /kg capacity
+    attribute num     wheels
+
+    None   = (   0  0 )
+    Single = (  40  1 )
+    Double = ( 100  2 )
+}
+
+// The capacity per wheel faults without wheels, whatever the load.
+behavior TrailerBike {
+    require (trailer.capacity / trailer.wheels) >= load
+}

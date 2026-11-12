@@ -1,0 +1,12 @@
+// A value never justifies the condition that produces it.
+
+test {
+    isEmpty assistBike.assistSpeed
+    isEmpty assistBike.motorPower
+    set assistBike.assistSpeed = 25
+    isFixed assistBike.motorPower = 250
+    isShown assistBike.motorPower = 250
+    remove assistBike.assistSpeed
+    isEmpty assistBike.assistSpeed
+    isEmpty assistBike.motorPower
+}

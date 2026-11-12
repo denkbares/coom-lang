@@ -1,0 +1,30 @@
+// The conditional default for the grips has a higher implicit priority than the one for the brake lever.
+
+test {
+    isShown softBrakesBike.suspensionFork = true
+    isAvailable softBrakesBike.handle.brakeLever = Basic
+}
+
+test {
+    set softBrakesBike.suspensionFork = true
+    isShown softBrakesBike.handle.extraSoftGrips = true
+    isEmpty softBrakesBike.handle.brakeLever
+    isAvailable softBrakesBike.handle.brakeLever = Basic
+    set softBrakesBike.handle.brakeLever = Basic
+    isFixed softBrakesBike.handle.extraSoftGrips = false
+}
+
+test {
+    set softBrakesBike.suspensionFork = false
+    isShown softBrakesBike.handle.brakeLever = Basic
+    isEmpty softBrakesBike.handle.extraSoftGrips
+    set softBrakesBike.handle.extraSoftGrips = true
+    isFixed softBrakesBike.handle.brakeLever = Rugged
+    isBlocked softBrakesBike.handle.brakeLever = Basic
+}
+
+test {
+    set softBrakesBike.handle.extraSoftGrips = true
+    isShown softBrakesBike.suspensionFork = true
+    isFixed softBrakesBike.handle.brakeLever = Rugged
+}
