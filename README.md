@@ -6,24 +6,39 @@ constraints, defaults and calculations over them.
 
 This repository is the home of the language definition and of its Python reference implementation.
 
+## Installation
+
+```shell
+pip install coom-api
+```
+
+This installs the complete reference implementation.
+
+> [!NOTE]
+> Work in progress towards COOM 1.0. Nothing in this repository is released yet.
+
+## Resources
+
 - Language documentation: https://www.coom-lang.org
 - Specification artifacts: [spec/](spec/) (grammar, conformance suite, schemas)
-- Reference implementation: Python packages sharing the namespace `coom`, sources in [packages/](packages/)
 - Changes to the language: [CHANGELOG.md](CHANGELOG.md)
 
-## Status
+## Packages
 
-Work in progress towards COOM 1.0. Nothing in this repository is released yet.
+The reference implementation is split into Python packages sharing the namespace `coom`. `coom-api` bundles all of
+them, the individual packages can be installed on their own for a smaller footprint.
 
-## Layout
+| package | modules | contents | dependencies |
+|---|---|---|---|
+| `coom-api` | `coom.api` | all packages below with their main entry points in one module | the packages below |
+| `coom-core` | `coom.model`, `coom.configuration`, `coom.check`, `coom.diagnostics` | model, configurations, exact evaluation, static checks | none |
+| `coom-lang` | `coom.parser`, `coom.compiler`, `coom.writer` | parser, compiler and writer of the COOM text syntax | coom-core, ANTLR runtime |
+| `coom-clingo` | `coom.clingo` | reference solver | coom-core, clingo |
+| `coom-cli` | `coom.cli` | the `coom` command | coom-core, coom-lang |
+| `coom-mcp` | `coom.mcp` | MCP server, under development | coom-core, coom-lang |
 
-```
-spec/grammar/        ANTLR 4 grammar of the language
-spec/conformance/    conformance suite, one folder per profile or module
-spec/schema/         JSON schemas (configuration, conformance results)
-packages/            Python reference implementation, one folder per package with its sources and tests
-scripts/             grammar build and maintenance scripts
-```
+All packages are released together with the same version and pin each other exactly. The namespace `coom` is reserved
+for packages from this repository.
 
 ## Implementations
 
@@ -31,26 +46,17 @@ scripts/             grammar build and maintenance scripts
 - [COOM Suite](https://github.com/potassco/coom-suite) by Potassco, an independent Python and ASP implementation.
 - The commercial denkbares platform, see https://www.denkbares.com.
 
-## Installing the reference implementation
+## Development
 
-Not yet published. Once released:
+The packages are developed in this repository as one uv workspace. `uv sync` installs all of them for development.
 
 ```
-pip install coom-api           # everything below in matching versions (except MCP), imported from coom.api
+spec/grammar/        ANTLR 4 grammar of the language
+spec/conformance/    conformance suite, one folder per profile or module
+spec/schema/         JSON schemas (configuration, conformance results)
+packages/            Python reference implementation
+scripts/             grammar build and maintenance scripts
 ```
-
-| package | modules | contents | dependencies |
-|---|---|---|---|
-| `coom-core` | `coom.model`, `coom.configuration`, `coom.check`, `coom.diagnostics` | model, configurations, exact evaluation, static checks | none |
-| `coom-lang` | `coom.parser`, `coom.compiler`, `coom.writer` | parser, compiler and writer of the COOM text syntax | coom-core, ANTLR runtime |
-| `coom-clingo` | `coom.clingo` | reference solver | coom-core, clingo |
-| `coom-cli` | `coom.cli` | the `coom` command | coom-core, coom-lang |
-| `coom-mcp` | `coom.mcp` | MCP server, under development | coom-core, coom-lang |
-| `coom-api` | `coom.api` | all of the above with their main entry points in one module, the MCP server as extra `[mcp]` | the packages above |
-
-The packages are developed in this repository as one uv workspace, `uv sync` installs all of them for development.
-They are released together with the same version and pin each other exactly. The namespace `coom` is reserved for
-packages from this repository.
 
 ## License
 
