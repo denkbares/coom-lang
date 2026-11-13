@@ -15,4 +15,4 @@ model = compile_files(["Bike.model"]).model
 configuration = ClingoSolver(model).solve()
 ```
 
-Sources live in the [coom-lang repository](https://github.com/denkbares/coom-lang) under `packages/coom-api`.
+Sources live in the [coom-api repository](https://github.com/denkbares/coom-api) under `packages/coom-api`.

@@ -12,4 +12,4 @@ model = result.model
 ```
 
 The compiled model is the one of `coom-core`. Sources live in the
-[coom-lang repository](https://github.com/denkbares/coom-lang) under `packages/coom-lang`.
+[coom-api repository](https://github.com/denkbares/coom-api) under `packages/coom-lang`.

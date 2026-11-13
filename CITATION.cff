@@ -5,7 +5,7 @@ type: software
 authors:
   - name: denkbares GmbH
     website: https://www.denkbares.com
-repository-code: https://github.com/denkbares/coom-lang
+repository-code: https://github.com/denkbares/coom-api
 url: https://www.coom-lang.org
 license: MIT
 preferred-citation:

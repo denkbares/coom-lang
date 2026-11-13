@@ -8,5 +8,5 @@ The model of the [COOM](https://www.coom-lang.org) product configuration languag
 - `coom.diagnostics` holds the messages all packages report
 
 The package has no dependencies. To read models from COOM source text install `coom-lang`, for everything at once
-install `coom-api`. Sources live in the [coom-lang repository](https://github.com/denkbares/coom-lang) under
+install `coom-api`. Sources live in the [coom-api repository](https://github.com/denkbares/coom-api) under
 `packages/coom-core`.

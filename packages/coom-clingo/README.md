@@ -13,7 +13,7 @@ configuration = ClingoSolver(model).solve()
 
 The solver works on the model of `coom-core`. Reading models from COOM source text needs `coom-lang` as well, which
 `coom-api` installs together with this package. Sources live in the
-[coom-lang repository](https://github.com/denkbares/coom-lang) under `packages/coom-clingo`.
+[coom-api repository](https://github.com/denkbares/coom-api) under `packages/coom-clingo`.
 
 ## Purpose
 

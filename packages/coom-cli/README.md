@@ -29,4 +29,4 @@ Diagnostics go to stderr as `file:line:col: severity code: message`, where the c
 status is 0 on success, 1 for a negative answer such as errors in the model and 2 when no answer is possible, for
 example after a usage error.
 
-Sources live in the [coom-lang repository](https://github.com/denkbares/coom-lang) under `packages/coom-cli`.
+Sources live in the [coom-api repository](https://github.com/denkbares/coom-api) under `packages/coom-cli`.

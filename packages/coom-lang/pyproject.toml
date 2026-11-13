@@ -26,8 +26,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://www.coom-lang.org"
-Repository = "https://github.com/denkbares/coom-lang"
-Changelog = "https://github.com/denkbares/coom-lang/blob/main/CHANGELOG.md"
+Repository = "https://github.com/denkbares/coom-api"
+Changelog = "https://github.com/denkbares/coom-api/blob/main/CHANGELOG.md"
 
 [tool.uv.build-backend]
 module-name = ["coom.parser", "coom.compiler", "coom.writer"]
