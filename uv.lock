@@ -260,10 +260,6 @@ dependencies = [
     { name = "coom-clingo" },
     { name = "coom-core" },
     { name = "coom-lang" },
-]
-
-[package.optional-dependencies]
-mcp = [
     { name = "coom-mcp" },
 ]
 
@@ -273,9 +269,8 @@ requires-dist = [
     { name = "coom-clingo", editable = "packages/coom-clingo" },
     { name = "coom-core", editable = "packages/coom-core" },
     { name = "coom-lang", editable = "packages/coom-lang" },
-    { name = "coom-mcp", marker = "extra == 'mcp'", editable = "packages/coom-mcp" },
+    { name = "coom-mcp", editable = "packages/coom-mcp" },
 ]
-provides-extras = ["mcp"]
 
 [[package]]
 name = "coom-cli"

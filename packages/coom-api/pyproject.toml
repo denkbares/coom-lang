@@ -25,10 +25,8 @@ dependencies = [
     "coom-lang==0.0.1a1",
     "coom-clingo==0.0.1a1",
     "coom-cli==0.0.1a1",
+    "coom-mcp==0.0.1a1",
 ]
-
-[project.optional-dependencies]
-mcp = ["coom-mcp==0.0.1a1"]
 
 [project.urls]
 Homepage = "https://www.coom-lang.org"
