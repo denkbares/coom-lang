@@ -9,7 +9,7 @@ import pytest
 
 from coom.compiler import compile_text
 from coom.model import Attribute, Enumeration, Feature, Model, Option, Structure
-from coom.writer import write
+from coom.writer import write, write_items
 
 CONFORMANCE = Path(__file__).resolve().parents[3] / "spec" / "conformance"
 MODELS = sorted(path for path in CONFORMANCE.rglob("*.model") if "syntax" not in path.relative_to(CONFORMANCE).parts)
@@ -177,3 +177,25 @@ def test_tests() -> None:
         "test { isEmpty bike.bags }"
     )
     assert "set Red = Blue" in written
+
+
+def test_selected_items_are_written_in_partial_blocks() -> None:
+    model = compile_text(BIKE + "behavior Bike { require stand }\ntest { set bike.stand = true }\n").model
+    selected = [model["Bike.weight"], model["Bike.color"], model["Size.large"], model["Size.volume"], *model.tests]
+    assert write_items(model, selected) == (
+        "structure Bike {\n"
+        "    Color                color\n"
+        "    num.## /kg -10.5-100 weight\n"
+        "}\n\n"
+        "enumeration Size {\n"
+        "    attribute num volume\n\n"
+        "    large = (-5)\n"
+        "}\n\n"
+        "test {\n"
+        "    set bike.stand = true\n"
+        "}\n"
+    )
+    assert write_items(model, [model["Color"], model["Color.Red"], *model.behaviors]) == (
+        "enumeration Color { Red; Blue; 'light green' }\n\nbehavior Bike {\n    require stand\n}\n"
+    )
+    assert write_items(model, []) == ""

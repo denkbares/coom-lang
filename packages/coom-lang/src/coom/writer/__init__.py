@@ -2,7 +2,7 @@
 
 import json
 from collections import Counter
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from decimal import Decimal
 from functools import cache
 from typing import assert_never
@@ -13,6 +13,7 @@ from antlr4.Token import Token
 from coom.model import (
     BOOLEAN_NAME,
     And,
+    Attribute,
     Behavior,
     Binary,
     BinaryOp,
@@ -26,7 +27,9 @@ from coom.model import (
     Constant,
     ConstantValue,
     Default,
+    Entity,
     Enumeration,
+    Feature,
     FeatureStep,
     Formula,
     Imply,
@@ -87,6 +90,16 @@ def write(model: Model) -> str:
     return _Writer(model).model()
 
 
+def write_items(model: Model, entities: Iterable[Entity]) -> str:
+    """Returns COOM text of selected entities of a model in declaration order.
+
+    A selected structure or enumeration is written whole. Selected features are written in a block of their structure
+    that declares only them. Selected attributes and options are written in a block of their enumeration that declares
+    only them, with all attributes or all options of the enumeration where none of that kind is selected.
+    """
+    return _Writer(model).items(set(entities))
+
+
 class _Writer:
     def __init__(self, model: Model) -> None:
         self.model_ = model
@@ -99,29 +112,55 @@ class _Writer:
         blocks += map(self.test, model.tests)
         return "\n\n".join(blocks) + "\n"
 
+    def items(self, selected: set[Entity]) -> str:
+        model = self.model_
+        blocks = []
+        for structure in (model.root, *model.structures):
+            features = [feature for feature in structure.features if feature in selected]
+            if structure in selected or features:
+                blocks.append(self.structure(structure, None if structure in selected else features))
+        for enumeration in model.enumerations:
+            attributes = [attribute for attribute in enumeration.attributes if attribute in selected]
+            options = [option for option in enumeration.options if option in selected]
+            if enumeration in selected or attributes or options:
+                if enumeration in selected:
+                    attributes, options = [], []
+                blocks.append(self.enumeration(enumeration, attributes or None, options or None))
+        blocks += self.behaviors([behavior for behavior in model.behaviors if behavior in selected])
+        blocks += [self.test(test) for test in model.tests if test in selected]
+        return "\n\n".join(blocks) + "\n" if blocks else ""
+
     # Declarations
 
-    def structure(self, structure: Structure) -> str:
+    def structure(self, structure: Structure, features: Sequence[Feature] | None = None) -> str:
         header = "product" if structure.is_root else f"structure {_name(structure.name)}"
         rows = [
             (_cardinality(feature.min, feature.max), self.type(feature.type), _name(feature.name))
-            for feature in structure.features
+            for feature in (structure.features if features is None else features)
         ]
         return _braced(header, _table(rows))
 
-    def enumeration(self, enumeration: Enumeration) -> str:
+    def enumeration(
+        self,
+        enumeration: Enumeration,
+        attributes: Sequence[Attribute] | None = None,
+        options: Sequence[Option] | None = None,
+    ) -> str:
+        """Writes an enumeration, or the given part of it."""
+        attributes = enumeration.attributes if attributes is None else attributes
+        options = enumeration.options if options is None else options
         header = f"enumeration {_name(enumeration.name)}"
-        options = [_name(option.name) for option in enumeration.options]
-        if not enumeration.attributes:
-            return f"{header} {{ {'; '.join(options)} }}"
-        attributes = _table(
-            [("attribute", self.type(attribute.type), _name(attribute.name)) for attribute in enumeration.attributes]
+        names = [_name(option.name) for option in options]
+        if not attributes:
+            return f"{header} {{ {'; '.join(names)} }}"
+        declarations = _table(
+            [("attribute", self.type(attribute.type), _name(attribute.name)) for attribute in attributes]
         )
         values = [
-            f"= ({' '.join(self.attribute_value(option.values[attribute]) for attribute in enumeration.attributes)})"
-            for option in enumeration.options
+            f"= ({' '.join(self.attribute_value(option.values[attribute]) for attribute in attributes)})"
+            for option in options
         ]
-        return _braced(header, [*attributes, "", *_table(list(zip(options, values, strict=True)))])
+        return _braced(header, [*declarations, "", *_table(list(zip(names, values, strict=True)))])
 
     def type(self, type_: Type) -> str:
         match type_:
