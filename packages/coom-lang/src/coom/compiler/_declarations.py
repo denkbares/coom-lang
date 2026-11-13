@@ -6,6 +6,7 @@ from types import MappingProxyType
 from typing import Any
 
 from coom.compiler._context import Abort, Compilation, children, name, need, unquote
+from coom.diagnostics import DiagnosticCode
 from coom.model import (
     BOOLEAN_NAME,
     Attribute,
@@ -32,7 +33,7 @@ def declare_types(compilation: Compilation, tree: Any) -> None:
             match node:
                 case COOMParser.ProductContext():
                     if compilation.product is not None:
-                        compilation.fail(node.kw, "the product is already defined")
+                        compilation.fail(node.kw, DiagnosticCode.NAME, "the product is already defined")
                     compilation.product = node
                     compilation.declared[node] = compilation.root
                     compilation.root.span = compilation.span(node)
@@ -51,9 +52,9 @@ def declare_types(compilation: Compilation, tree: Any) -> None:
 def _type_name(compilation: Compilation, node: Any) -> str:
     type_name = name(node.name())
     if type_name == BOOLEAN_NAME:
-        compilation.fail(node.name(), f"{BOOLEAN_NAME} is a predefined type")
+        compilation.fail(node.name(), DiagnosticCode.NAME, f"{BOOLEAN_NAME} is a predefined type")
     if type_name in compilation.types:
-        compilation.fail(node.name(), f"the type {type_name} is already defined")
+        compilation.fail(node.name(), DiagnosticCode.NAME, f"the type {type_name} is already defined")
     return type_name
 
 
@@ -70,7 +71,9 @@ def declare_fields(compilation: Compilation, tree: Any) -> None:
                         continue
                     if any(other.name == feature.name for other in features):
                         compilation.error(
-                            feature_node.field().fieldName, f"the feature {feature.name} is already defined"
+                            feature_node.field().fieldName,
+                            DiagnosticCode.NAME,
+                            f"the feature {feature.name} is already defined",
                         )
                         continue
                     feature.owner = structure
@@ -102,7 +105,7 @@ def _cardinality(compilation: Compilation, node: Any) -> tuple[int, int | None]:
         return low, None
     high = int(node.max_.text)
     if high < low:
-        compilation.fail(node, f"the maximum {high} is smaller than the minimum {low}")
+        compilation.fail(node, DiagnosticCode.STRUCTURE, f"the maximum {high} is smaller than the minimum {low}")
     return low, high
 
 
@@ -117,7 +120,7 @@ def _field_type(compilation: Compilation, field: Any) -> Type:
         return Boolean(span=compilation.span(reference))
     type_ = compilation.types.get(type_name)
     if type_ is None:
-        compilation.fail(reference, f"the type {type_name} is not defined")
+        compilation.fail(reference, DiagnosticCode.NAME, f"the type {type_name} is not defined")
     return type_
 
 
@@ -132,7 +135,9 @@ def _numerical(compilation: Compilation, node: Any) -> Numerical:
     low = _bound(node.min_)
     high = _bound(node.max_)
     if low is not None and high is not None and high < low:
-        compilation.fail(node, f"the upper bound {high} is smaller than the lower bound {low}")
+        compilation.fail(
+            node, DiagnosticCode.STRUCTURE, f"the upper bound {high} is smaller than the lower bound {low}"
+        )
     return Numerical(digits=digits, unit=unit, min=low, max=high, span=compilation.span(node))
 
 
@@ -152,7 +157,9 @@ def _members(compilation: Compilation, enumeration: Enumeration, node: Any) -> N
                     field = need(member.field())
                     type_ = _field_type(compilation, field)
                     if isinstance(type_, Structure):
-                        compilation.fail(field, f"an attribute cannot have the structure type {type_.name}")
+                        compilation.fail(
+                            field, DiagnosticCode.TYPE, f"an attribute cannot have the structure type {type_.name}"
+                        )
                     item: Attribute | Option = Attribute(
                         name=name(field.fieldName), type=type_, span=compilation.span(member)
                     )
@@ -165,7 +172,9 @@ def _members(compilation: Compilation, enumeration: Enumeration, node: Any) -> N
         except Abort:
             continue
         if item.name in {other.name for other in attributes} | {other.name for other in options}:
-            compilation.error(name_node, f"the name {item.name} is already defined in {enumeration.name}")
+            compilation.error(
+                name_node, DiagnosticCode.NAME, f"the name {item.name} is already defined in {enumeration.name}"
+            )
             continue
         item.owner = enumeration
         if isinstance(item, Attribute):
@@ -174,7 +183,11 @@ def _members(compilation: Compilation, enumeration: Enumeration, node: Any) -> N
             options.append(item)
             compilation.options[member] = item
     if not options:
-        compilation.error(node.name() or node, f"the enumeration {enumeration.name} needs at least one option")
+        compilation.error(
+            node.name() or node,
+            DiagnosticCode.STRUCTURE,
+            f"the enumeration {enumeration.name} needs at least one option",
+        )
     enumeration.attributes = tuple(attributes)
     enumeration.options = tuple(options)
 
@@ -193,6 +206,7 @@ def assign_attribute_values(compilation: Compilation, tree: Any) -> None:
             if len(constants) != len(enumeration.attributes):
                 compilation.error(
                     option_node,
+                    DiagnosticCode.STRUCTURE,
                     f"the option {option.name} has {len(constants)} values for "
                     f"{len(enumeration.attributes)} attributes",
                 )
@@ -208,19 +222,19 @@ def _attribute_value(compilation: Compilation, attribute: Attribute, node: Any) 
     match attribute.type:
         case Numerical():
             if node.floating() is None:
-                compilation.fail(node, f"the attribute {attribute.name} expects a number")
+                compilation.fail(node, DiagnosticCode.TYPE, f"the attribute {attribute.name} expects a number")
             return Decimal(node.floating().getText())
         case Textual():
             return unquote(node.getText())
         case Boolean():
             text: str = node.getText()
             if text not in ("true", "false"):
-                compilation.fail(node, f"the attribute {attribute.name} expects true or false")
+                compilation.fail(node, DiagnosticCode.TYPE, f"the attribute {attribute.name} expects true or false")
             return text == "true"
         case Enumeration() as enumeration:
             try:
                 return enumeration.option(unquote(node.getText()))
             except KeyError:
-                compilation.fail(node, f"{node.getText()} is not an option of {enumeration.name}")
+                compilation.fail(node, DiagnosticCode.NAME, f"{node.getText()} is not an option of {enumeration.name}")
         case Structure():
             raise Abort

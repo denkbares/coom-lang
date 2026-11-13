@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from decimal import Decimal
 from typing import NamedTuple, assert_never
 
-from coom.diagnostics import Diagnostic, Severity
+from coom.diagnostics import Diagnostic, DiagnosticCode, Severity
 from coom.model import (
     And,
     Behavior,
@@ -127,8 +127,8 @@ class TypeChecker:
     def __init__(self) -> None:
         self.diagnostics: list[Diagnostic] = []
 
-    def error(self, span: Span | None, message: str) -> None:
-        self.diagnostics.append(Diagnostic(Severity.ERROR, message, span))
+    def error(self, span: Span | None, code: DiagnosticCode, message: str) -> None:
+        self.diagnostics.append(Diagnostic(Severity.ERROR, code, message, span))
 
     # Formulas
 
@@ -156,10 +156,10 @@ class TypeChecker:
         if typed is None:
             return False
         if typed.collection:
-            self.error(formula.span, f"arithmetic needs a single number, not {describe(typed)}")
+            self.error(formula.span, DiagnosticCode.TYPE, f"arithmetic needs a single number, not {describe(typed)}")
             return False
         if not isinstance(typed.base, Numerical):
-            self.error(formula.span, f"arithmetic needs a number, not {describe(typed)}")
+            self.error(formula.span, DiagnosticCode.TYPE, f"arithmetic needs a number, not {describe(typed)}")
             return False
         return True
 
@@ -176,13 +176,17 @@ class TypeChecker:
                 return Typed(NUMBER)
             case Function.SUM:
                 if not all(isinstance(base, Numerical) for base in bases):
-                    self.error(call.span, "sum needs numbers")
+                    self.error(call.span, DiagnosticCode.TYPE, "sum needs numbers")
                     return None
                 return Typed(NUMBER)
             case _:
                 first = bases[0]
                 if not all(comparable(CompareOp.LT, first, other) for other in bases):
-                    self.error(call.span, f"{call.function} needs values that can be ordered against each other")
+                    self.error(
+                        call.span,
+                        DiagnosticCode.TYPE,
+                        f"{call.function} needs values that can be ordered against each other",
+                    )
                     return None
                 return Typed(NUMBER if isinstance(first, Numerical) else first)
 
@@ -190,7 +194,7 @@ class TypeChecker:
         for step in path.steps:
             index = step.index if isinstance(step, FeatureStep) else None
             if index is not None and (index.first >= 0) == (index.last >= 0) and index.first > index.last:
-                self.error(step.span, f"the index range [{index}] is empty")
+                self.error(step.span, DiagnosticCode.STRUCTURE, f"the index range [{index}] is empty")
 
     # Conditions
 
@@ -215,9 +219,11 @@ class TypeChecker:
         if left_type is None or right_type is None:
             return
         if left_type.collection and right_type.collection:
-            self.error(span, "cannot compare two collections with each other")
+            self.error(span, DiagnosticCode.TYPE, "cannot compare two collections with each other")
         elif not comparable(op, left_type.base, right_type.base):
-            self.error(span, f"cannot compare {describe(left_type)} with {describe(right_type)} by {op}")
+            self.error(
+                span, DiagnosticCode.TYPE, f"cannot compare {describe(left_type)} with {describe(right_type)} by {op}"
+            )
 
     # Assignments
 
@@ -225,22 +231,30 @@ class TypeChecker:
         """Checks a value written to a feature, by imply, default or a test step."""
         self.path(target)
         if isinstance(target.type, Structure):
-            self.error(span, f"cannot assign a value to the structure feature {target}")
+            self.error(span, DiagnosticCode.TYPE, f"cannot assign a value to the structure feature {target}")
             return
         typed = self.formula(value)
         if typed is None:
             return
         if typed.collection:
-            self.error(value.span, f"cannot assign {describe(typed)} to {target}")
+            self.error(value.span, DiagnosticCode.TYPE, f"cannot assign {describe(typed)} to {target}")
         elif not comparable(CompareOp.EQ, target.type, typed.base):
-            self.error(value.span, f"cannot assign {describe(typed)} to {target}, which holds {type_name(target.type)}")
+            self.error(
+                value.span,
+                DiagnosticCode.TYPE,
+                f"cannot assign {describe(typed)} to {target}, which holds {type_name(target.type)}",
+            )
         elif (
             isinstance(value, Constant)
             and isinstance(value.value, Decimal)
             and isinstance(target.type, Numerical)
             and not in_range(target.type, value.value)
         ):
-            self.error(value.span, f"{value.value} is outside the range {type_name(target.type)} of {target}")
+            self.error(
+                value.span,
+                DiagnosticCode.TYPE,
+                f"{value.value} is outside the range {type_name(target.type)} of {target}",
+            )
 
     # Model items
 
@@ -255,7 +269,11 @@ class TypeChecker:
             case Optimize():
                 self.path(behavior.target)
                 if not isinstance(behavior.target.type, Numerical):
-                    self.error(behavior.span, f"{behavior.direction} needs a numeric feature, not {behavior.target}")
+                    self.error(
+                        behavior.span,
+                        DiagnosticCode.TYPE,
+                        f"{behavior.direction} needs a numeric feature, not {behavior.target}",
+                    )
             case Visibility():
                 self.path(behavior.target)
             case Combinations():
@@ -288,6 +306,7 @@ class TypeChecker:
                 if isinstance(numerical, Numerical) and isinstance(value, Decimal) and not in_range(numerical, value):
                     self.error(
                         option.span,
+                        DiagnosticCode.TYPE,
                         f"{value} is outside the range {type_name(numerical)} of the attribute {attribute.name}",
                     )
 

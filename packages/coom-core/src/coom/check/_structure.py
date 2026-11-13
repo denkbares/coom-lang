@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 
-from coom.diagnostics import Diagnostic, Severity
+from coom.diagnostics import Diagnostic, DiagnosticCode, Severity
 from coom.model import Feature, Model, Structure
 
 
@@ -16,7 +16,10 @@ def check_structure(model: Model) -> Iterator[Diagnostic]:
         reported.update(feature.owner for feature in cycle)
         through = " > ".join(feature.qualified_name for feature in cycle)
         yield Diagnostic(
-            Severity.ERROR, f"the structure {structure.name} contains itself through {through}", cycle[0].span
+            Severity.ERROR,
+            DiagnosticCode.STRUCTURE,
+            f"the structure {structure.name} contains itself through {through}",
+            cycle[0].span,
         )
 
 

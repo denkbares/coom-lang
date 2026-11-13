@@ -15,7 +15,7 @@ from typing import assert_never
 
 from clingo import Control, Function, Number, String, Symbol
 from coom.configuration import Configuration, Instance, Value
-from coom.diagnostics import Diagnostic, Severity
+from coom.diagnostics import Diagnostic, DiagnosticCode, Severity
 from coom.model import (
     And,
     AttributeStep,
@@ -261,7 +261,7 @@ class Encoding:
         return not any(diagnostic.severity is Severity.ERROR for diagnostic in self.diagnostics)
 
     def _report(self, severity: Severity, message: str, item: Behavior | Feature) -> None:
-        self.diagnostics.append(Diagnostic(severity, message, item.span))
+        self.diagnostics.append(Diagnostic(severity, DiagnosticCode.SOLVER, message, item.span))
 
     def _fact(self, name: str, *arguments: Symbol | int | str) -> None:
         self.facts.append(Function(name, [_symbol(argument) for argument in arguments]))

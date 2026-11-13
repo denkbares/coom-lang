@@ -5,6 +5,7 @@ from typing import Any
 from coom.compiler._behaviors import resolve_origin
 from coom.compiler._context import Abort, Compilation, children, name, need
 from coom.compiler._expressions import Expressions, Scope
+from coom.diagnostics import DiagnosticCode
 from coom.model import (
     AttributeStep,
     Constant,
@@ -71,7 +72,11 @@ def _step(compilation: Compilation, expressions: Expressions, node: Any, scope: 
         case COOMParser.Test_availableContext() | COOMParser.Test_blockedContext():
             path = expressions.assignable(node.path(), scope)
             if node.formula_atom() is None and not isinstance(path.type, Structure):
-                compilation.fail(node.path(), f"{need(node.kw).text} needs a value unless the path holds instances")
+                compilation.fail(
+                    node.path(),
+                    DiagnosticCode.TYPE,
+                    f"{need(node.kw).text} needs a value unless the path holds instances",
+                )
             value = None if node.formula_atom() is None else _value(compilation, expressions, node, path, scope)
             if isinstance(node, COOMParser.Test_availableContext):
                 return IsAvailable(path, value, span=span)
@@ -81,7 +86,9 @@ def _step(compilation: Compilation, expressions: Expressions, node: Any, scope: 
             if node.formula_atom() is None:
                 return IsHidden(path, span=span)
             if not isinstance(path.type, Enumeration):
-                compilation.fail(node.path(), "isHidden with an option needs a path to an enumeration feature")
+                compilation.fail(
+                    node.path(), DiagnosticCode.TYPE, "isHidden with an option needs a path to an enumeration feature"
+                )
             return IsHidden(path, _value(compilation, expressions, node, path, scope), span=span)
         case _:
             raise Abort
@@ -90,7 +97,7 @@ def _step(compilation: Compilation, expressions: Expressions, node: Any, scope: 
 def _path(expressions: Expressions, node: Any, scope: Scope) -> Path:
     path = expressions.path(node.path(), scope)
     if path.steps and isinstance(path.steps[-1], AttributeStep):
-        expressions.compilation.fail(node.path(), "a test step cannot address an attribute")
+        expressions.compilation.fail(node.path(), DiagnosticCode.TYPE, "a test step cannot address an attribute")
     return path
 
 
@@ -98,5 +105,5 @@ def _value(compilation: Compilation, expressions: Expressions, node: Any, path: 
     atom = need(node.formula_atom())
     value = expressions.formula(atom, scope.expecting(path.type))
     if not isinstance(value, Constant):
-        compilation.fail(atom, f"{atom.getText()} is not a value")
+        compilation.fail(atom, DiagnosticCode.TYPE, f"{atom.getText()} is not a value")
     return value

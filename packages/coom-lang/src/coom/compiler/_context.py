@@ -7,7 +7,7 @@ from typing import Any, NoReturn
 from antlr4 import ParserRuleContext
 from antlr4.tree.Tree import ErrorNode
 
-from coom.diagnostics import Diagnostic, Severity
+from coom.diagnostics import Diagnostic, DiagnosticCode, Severity
 from coom.model import ROOT_NAME, Behavior, Enumeration, Option, Span, Structure, TestCase
 from coom.parser import token_span
 
@@ -44,11 +44,11 @@ class Compilation:
             return token_span(node.start, stop, self.source)
         return token_span(node, source=self.source)
 
-    def error(self, node: Any, message: str) -> None:
-        self.diagnostics.append(Diagnostic(Severity.ERROR, message, self.span(node)))
+    def error(self, node: Any, code: DiagnosticCode, message: str) -> None:
+        self.diagnostics.append(Diagnostic(Severity.ERROR, code, message, self.span(node)))
 
-    def fail(self, node: Any, message: str) -> NoReturn:
-        self.error(node, message)
+    def fail(self, node: Any, code: DiagnosticCode, message: str) -> NoReturn:
+        self.error(node, code, message)
         raise Abort
 
 

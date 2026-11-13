@@ -10,7 +10,7 @@ from antlr4.error.ErrorListener import ErrorListener
 from antlr4.error.Errors import ParseCancellationException
 from antlr4.error.ErrorStrategy import BailErrorStrategy, DefaultErrorStrategy
 
-from coom.diagnostics import Diagnostic, Severity
+from coom.diagnostics import Diagnostic, DiagnosticCode, Severity
 from coom.model import Span
 from coom.parser._antlr.COOMLexer import COOMLexer
 from coom.parser._antlr.COOMParser import COOMParser
@@ -91,4 +91,4 @@ class _Collector(ErrorListener):  # type: ignore[misc]
                 msg = f"'{offendingSymbol.text}' is reserved and cannot be used here, quote it to use it as a name"
             elif offendingSymbol.type == Token.EOF:
                 span = Span(line, column, line, column, self.source)
-        self.diagnostics.append(Diagnostic(Severity.ERROR, msg, span))
+        self.diagnostics.append(Diagnostic(Severity.ERROR, DiagnosticCode.SYNTAX, msg, span))

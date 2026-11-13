@@ -12,6 +12,7 @@ from typing import Any, TypedDict
 
 from coom.compiler._context import Abort, Compilation, children, name, need, unquote
 from coom.compiler._expressions import Expressions, Scope
+from coom.diagnostics import DiagnosticCode
 from coom.model import (
     AttributeStep,
     Cell,
@@ -57,9 +58,9 @@ def resolve_origin(compilation: Compilation, node: Any) -> Structure:
     type_name = name(node)
     type_ = compilation.types.get(type_name)
     if type_ is None:
-        compilation.fail(node, f"the structure {type_name} is not defined")
+        compilation.fail(node, DiagnosticCode.NAME, f"the structure {type_name} is not defined")
     if not isinstance(type_, Structure):
-        compilation.fail(node, f"{type_name} is an enumeration, not a structure")
+        compilation.fail(node, DiagnosticCode.TYPE, f"{type_name} is an enumeration, not a structure")
     return type_
 
 
@@ -140,7 +141,7 @@ class _Block:
         if node.priority is not None:
             priority = int(node.priority.text)
             if priority < 1:
-                self.compilation.fail(node.priority, "the priority must be at least 1")
+                self.compilation.fail(node.priority, DiagnosticCode.STRUCTURE, "the priority must be at least 1")
         target = self.expressions.assignable(node.path(), scope)
         value = self.expressions.formula(node.formula(), scope.expecting(target.type))
         self.compilation.behaviors.append(
@@ -159,33 +160,41 @@ class _Block:
         if node.name():
             enumeration = target.type
             if not isinstance(enumeration, Enumeration):
-                self.compilation.fail(node.path(), "only options of an enumeration can be hidden individually")
+                self.compilation.fail(
+                    node.path(), DiagnosticCode.TYPE, "only options of an enumeration can be hidden individually"
+                )
             if directive is not Directive.HIDE:
-                self.compilation.fail(node.directive, "options can only be hidden, not made read only")
+                self.compilation.fail(
+                    node.directive, DiagnosticCode.STRUCTURE, "options can only be hidden, not made read only"
+                )
             for option_node in node.name():
                 try:
                     option = enumeration.option(name(option_node))
                 except KeyError:
                     self.compilation.fail(
-                        option_node, f"{option_node.getText()} is not an option of {enumeration.name}"
+                        option_node,
+                        DiagnosticCode.NAME,
+                        f"{option_node.getText()} is not an option of {enumeration.name}",
                     )
                 if option not in options:
                     options.append(option)
             if len(options) == len(enumeration.options):
-                self.compilation.fail(node, f"cannot hide all options of {enumeration.name}")
+                self.compilation.fail(node, DiagnosticCode.STRUCTURE, f"cannot hide all options of {enumeration.name}")
         self.compilation.behaviors.append(
             Visibility(directive=directive, target=target, options=tuple(options), **self._common(node, frame))
         )
 
     def _combinations(self, node: Any, scope: Scope, frame: _Frame) -> None:
         if not node.combination_row():
-            self.compilation.fail(node.kw, "a combinations table needs at least one row")
+            self.compilation.fail(node.kw, DiagnosticCode.STRUCTURE, "a combinations table needs at least one row")
         columns = tuple(self.expressions.formula(column, scope) for column in node.formula())
         rows = []
         for row_node in node.combination_row():
             items = row_node.combination_item()
             if len(items) != len(columns):
-                self.compilation.error(row_node, f"the row has {len(items)} cells for {len(columns)} columns")
+                self.compilation.error(
+                    row_node, DiagnosticCode.STRUCTURE, f"the row has {len(items)} cells for {len(columns)} columns"
+                )
                 continue
             try:
                 cells = tuple(self._cell(column, item, scope) for column, item in zip(columns, items, strict=True))
@@ -216,7 +225,9 @@ class _Block:
             for target, target_node in zip(targets, node.assignment_columns.formula(), strict=True):
                 path = target.path if isinstance(target, PathAccess) else None
                 if path is None or not path.steps or isinstance(path.steps[-1], AttributeStep):
-                    self.compilation.fail(target_node, "a column of a default table must be a path to a feature")
+                    self.compilation.fail(
+                        target_node, DiagnosticCode.TYPE, "a column of a default table must be a path to a feature"
+                    )
         for row in node.derivation_table_row():
             with contextlib.suppress(Abort):
                 self._derivation_row(kind, targets, columns, row, scope, frame)
@@ -227,9 +238,13 @@ class _Block:
         cells = node.derivation_condition_cell()
         values = node.derivation_table_atom()
         if len(cells) != len(columns):
-            self.compilation.fail(node, f"the row has {len(cells)} condition cells for {len(columns)} columns")
+            self.compilation.fail(
+                node, DiagnosticCode.STRUCTURE, f"the row has {len(cells)} condition cells for {len(columns)} columns"
+            )
         if len(values) != len(targets):
-            self.compilation.fail(node, f"the row has {len(values)} values for {len(targets)} columns")
+            self.compilation.fail(
+                node, DiagnosticCode.STRUCTURE, f"the row has {len(values)} values for {len(targets)} columns"
+            )
         # A row reads as a set of statements that share the conditions of its cells, a cell holding if any atom holds.
         conditions = list(frame.conditions)
         for column, cell in zip(columns, cells, strict=True):
@@ -246,7 +261,9 @@ class _Block:
             if kind == "require":
                 self.compilation.behaviors.append(Require(condition=compare, **common))
             elif compare.op is not CompareOp.EQ:
-                self.compilation.fail(value_node, "a default table only assigns values with =")
+                self.compilation.fail(
+                    value_node, DiagnosticCode.STRUCTURE, "a default table only assigns values with ="
+                )
             else:
                 assert isinstance(target, PathAccess)
                 self.compilation.behaviors.append(Default(target=target.path, value=compare.right, **common))

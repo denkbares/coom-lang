@@ -34,7 +34,7 @@ def test_errors_carry_the_span_of_the_offending_token() -> None:
     [error, *_] = result.diagnostics
     assert error.severity is Severity.ERROR
     assert error.span == Span(2, 12, 2, 13, "bike.model")
-    assert str(error).startswith("bike.model:2:13: error: ")
+    assert str(error).startswith("bike.model:2:13: error syntax: ")
 
 
 def test_reserved_words_get_a_dedicated_message() -> None:

@@ -10,6 +10,7 @@ from typing import Any
 from antlr4.tree.Tree import TerminalNode
 
 from coom.compiler._context import Abort, Compilation, children, name, need, unquote
+from coom.diagnostics import DiagnosticCode
 from coom.model import (
     And,
     AttributeStep,
@@ -160,7 +161,9 @@ class Expressions:
         low, high = ARITY.get(function, (1, 1))
         if len(args) < low or (high is not None and len(args) > high):
             expected = f"at least {low}" if high is None else str(low) if low == high else f"{low} or {high}"
-            self.compilation.fail(node, f"{function} expects {expected} arguments but got {len(args)}")
+            self.compilation.fail(
+                node, DiagnosticCode.STRUCTURE, f"{function} expects {expected} arguments but got {len(args)}"
+            )
         return Call(function, args, span=self.compilation.span(node))
 
     def _atom(self, node: Any, scope: Scope) -> Formula:
@@ -198,11 +201,13 @@ class Expressions:
             return None
         for item in items[2:]:
             if not isinstance(value, Option) or item.path_index():
-                self.compilation.fail(item, f"cannot access {item.getText()} on the value {value}")
+                self.compilation.fail(item, DiagnosticCode.TYPE, f"cannot access {item.getText()} on the value {value}")
             try:
                 value = value.value(name(item.name()))
             except KeyError:
-                self.compilation.fail(item, f"{value.owner.name} has no attribute {item.getText()}")
+                self.compilation.fail(
+                    item, DiagnosticCode.NAME, f"{value.owner.name} has no attribute {item.getText()}"
+                )
         return Constant(value, span=self._between(items[0].start, items[-1].stop))
 
     # Paths
@@ -216,13 +221,15 @@ class Expressions:
             steps = list(base.steps)
             if first.path_index():
                 if not steps or not isinstance(steps[-1], FeatureStep):
-                    self.compilation.fail(first, f"{first.name().getText()} cannot be indexed")
+                    self.compilation.fail(first, DiagnosticCode.TYPE, f"{first.name().getText()} cannot be indexed")
                 last = steps[-1]
                 assert isinstance(last, FeatureStep)
                 steps[-1] = FeatureStep(last.feature, self._index(first, last.feature.max), span=last.span)
             rest = items[1:]
         elif bound is not None:
-            self.compilation.fail(first, f"{first.name().getText()} is a value and cannot start a path")
+            self.compilation.fail(
+                first, DiagnosticCode.TYPE, f"{first.name().getText()} is a value and cannot start a path"
+            )
         else:
             base = Path(self.origin)
             steps = []
@@ -235,9 +242,9 @@ class Expressions:
         """Compiles a path that a statement assigns to, which must end at a feature."""
         path = self.path(node, scope)
         if not path.steps:
-            self.compilation.fail(node, "cannot assign to the origin structure itself")
+            self.compilation.fail(node, DiagnosticCode.TYPE, "cannot assign to the origin structure itself")
         if isinstance(path.steps[-1], AttributeStep):
-            self.compilation.fail(node, "cannot assign to an attribute")
+            self.compilation.fail(node, DiagnosticCode.TYPE, "cannot assign to an attribute")
         return path
 
     def _step(self, item: Any, current: Type) -> Step:
@@ -248,18 +255,18 @@ class Expressions:
                 try:
                     feature = current.feature(step_name)
                 except KeyError:
-                    self.compilation.fail(item, f"{_display(current)} has no feature {step_name}")
+                    self.compilation.fail(item, DiagnosticCode.NAME, f"{_display(current)} has no feature {step_name}")
                 index = self._index(item, feature.max) if item.path_index() else None
                 return FeatureStep(feature, index, span=span)
             case Enumeration():
                 if item.path_index():
-                    self.compilation.fail(item, f"the attribute {step_name} cannot be indexed")
+                    self.compilation.fail(item, DiagnosticCode.TYPE, f"the attribute {step_name} cannot be indexed")
                 try:
                     return AttributeStep(current.attribute(step_name), span=span)
                 except KeyError:
-                    self.compilation.fail(item, f"{current.name} has no attribute {step_name}")
+                    self.compilation.fail(item, DiagnosticCode.NAME, f"{current.name} has no attribute {step_name}")
             case _:
-                self.compilation.fail(item, f"cannot access {step_name} on a number or text")
+                self.compilation.fail(item, DiagnosticCode.TYPE, f"cannot access {step_name} on a number or text")
 
     def _index(self, item: Any, maximum: int | None) -> Index:
         bounds = []
@@ -267,7 +274,9 @@ class Expressions:
             text = index_node.getText()
             value = -1 - (int(text[5:]) if len(text) > 4 else 0) if text.startswith("last") else int(text)
             if maximum is not None and (value >= maximum if value >= 0 else -value > maximum):
-                self.compilation.fail(index_node, f"the index {text} exceeds the maximum cardinality {maximum}")
+                self.compilation.fail(
+                    index_node, DiagnosticCode.STRUCTURE, f"the index {text} exceeds the maximum cardinality {maximum}"
+                )
             bounds.append(value)
         return Index(bounds[0], bounds[-1])
 

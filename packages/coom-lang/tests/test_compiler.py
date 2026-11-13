@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from coom.compiler import compile, compile_text
+from coom.diagnostics import DiagnosticCode
 from coom.model import (
     And,
     AttributeStep,
@@ -255,8 +256,18 @@ def test_visibility_tests() -> None:
 
 def test_errors_skip_the_statement_and_keep_the_rest() -> None:
     result = compile_text(BIKE + "behavior Bike {\n require colour = Red\n require weight > 1\n}")
-    assert [str(d) for d in result.diagnostics] == ["22:10: error: Bike has no feature colour"]
+    assert [str(d) for d in result.diagnostics] == ["22:10: error name: Bike has no feature colour"]
     assert len(result.model.behaviors) == 1
+
+
+def test_diagnostics_carry_the_code_of_their_family() -> None:
+    def codes(text: str) -> list[DiagnosticCode]:
+        return [diagnostic.code for diagnostic in compile_text(BIKE + text).diagnostics]
+
+    assert codes("behavior Bike { require colour = Red }") == [DiagnosticCode.NAME]
+    assert codes('behavior Bike { require weight = "heavy" }') == [DiagnosticCode.TYPE]
+    assert codes("structure Bad { num 3-1 x }") == [DiagnosticCode.STRUCTURE]
+    assert codes("behavior Bike { require }") == [DiagnosticCode.SYNTAX]
 
 
 def test_declaration_errors() -> None:

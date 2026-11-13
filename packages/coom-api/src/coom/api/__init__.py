@@ -10,7 +10,7 @@ from importlib.metadata import version
 from coom.clingo.solver import ClingoSolver, ClingoSolverError
 from coom.compiler import CompileResult, compile, compile_files, compile_text
 from coom.configuration import Configuration
-from coom.diagnostics import Diagnostic, Severity
+from coom.diagnostics import Diagnostic, DiagnosticCode, Severity
 from coom.model import Model
 from coom.parser import LANGUAGE_VERSION, ParseResult, parse, parse_file
 from coom.writer import write
@@ -22,6 +22,7 @@ __all__ = [
     "CompileResult",
     "Configuration",
     "Diagnostic",
+    "DiagnosticCode",
     "Model",
     "ParseResult",
     "Severity",
