@@ -1,0 +1,1090 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.coom-lang.org/schema/model.schema.json",
+  "title": "COOM model",
+  "description": "A compiled COOM model. Entities refer to each other by name, the name of an entity is the selector of the coom command that addresses it. Lines and columns count from one, the end column is exclusive.",
+  "type": "object",
+  "properties": {
+    "root": {
+      "$ref": "#/$defs/structure"
+    },
+    "structures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/structure"
+      }
+    },
+    "enumerations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/enumeration"
+      }
+    },
+    "behaviors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/behavior"
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/test"
+      }
+    }
+  },
+  "required": [
+    "root",
+    "structures",
+    "enumerations",
+    "behaviors",
+    "tests"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "entity": {
+      "description": "Any entity, as selections of the coom command list them.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/structure"
+        },
+        {
+          "$ref": "#/$defs/feature"
+        },
+        {
+          "$ref": "#/$defs/enumeration"
+        },
+        {
+          "$ref": "#/$defs/attribute"
+        },
+        {
+          "$ref": "#/$defs/option"
+        },
+        {
+          "$ref": "#/$defs/behavior"
+        },
+        {
+          "$ref": "#/$defs/test"
+        }
+      ]
+    },
+    "location": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "type": "integer"
+        },
+        "column": {
+          "type": "integer"
+        },
+        "endLine": {
+          "type": "integer"
+        },
+        "endColumn": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "line",
+        "column",
+        "endLine",
+        "endColumn"
+      ],
+      "additionalProperties": false
+    },
+    "number": {
+      "description": "A number, as a string where a JSON number would not keep the exact decimal.",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+        }
+      ]
+    },
+    "structure": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "structure"
+        },
+        "name": {
+          "type": "string"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/feature"
+          }
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "features",
+        "location"
+      ],
+      "additionalProperties": false,
+      "description": "A structure, the root structure of the product being named :root."
+    },
+    "feature": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "feature"
+        },
+        "name": {
+          "type": "string"
+        },
+        "structure": {
+          "type": "string"
+        },
+        "min": {
+          "type": "integer"
+        },
+        "max": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "structure",
+        "min",
+        "max",
+        "type",
+        "location"
+      ],
+      "additionalProperties": false,
+      "description": "A feature named as Structure.feature, max null meaning unbounded."
+    },
+    "enumeration": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "enumeration"
+        },
+        "name": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attribute"
+          }
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "attributes",
+        "options",
+        "location"
+      ],
+      "additionalProperties": false
+    },
+    "attribute": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "attribute"
+        },
+        "name": {
+          "type": "string"
+        },
+        "enumeration": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "enumeration",
+        "type",
+        "location"
+      ],
+      "additionalProperties": false
+    },
+    "option": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "option"
+        },
+        "name": {
+          "type": "string"
+        },
+        "enumeration": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object",
+          "description": "The value of each attribute by its name, options by their name.",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "enumeration",
+        "values",
+        "location"
+      ],
+      "additionalProperties": false
+    },
+    "type": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "structure",
+                "enumeration"
+              ]
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "number"
+            },
+            "digits": {
+              "type": "integer"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "min": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "max": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "digits",
+            "unit",
+            "min",
+            "max"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "text",
+                "boolean"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "path": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string"
+        },
+        "rooted": {
+          "type": "boolean"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "feature": {
+                    "type": "string"
+                  },
+                  "index": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "first": {
+                        "type": "integer"
+                      },
+                      "last": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "first",
+                      "last"
+                    ],
+                    "additionalProperties": false,
+                    "description": "An inclusive index range, negative indices count from the end."
+                  }
+                },
+                "required": [
+                  "feature",
+                  "index"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "attribute": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "attribute"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "origin",
+        "rooted",
+        "steps"
+      ],
+      "additionalProperties": false
+    },
+    "formula": {
+      "description": "A formula or a condition as a tree.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "number"
+            },
+            "value": {
+              "$ref": "#/$defs/number"
+            }
+          },
+          "required": [
+            "node",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "node",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "node",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "option"
+            },
+            "option": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "node",
+            "option"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "path"
+            },
+            "path": {
+              "$ref": "#/$defs/path"
+            }
+          },
+          "required": [
+            "node",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "enum": [
+                "negate",
+                "not"
+              ]
+            },
+            "operand": {
+              "$ref": "#/$defs/formula"
+            }
+          },
+          "required": [
+            "node",
+            "operand"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "binary"
+            },
+            "op": {
+              "enum": [
+                "+",
+                "-",
+                "*",
+                "/",
+                "^"
+              ]
+            },
+            "left": {
+              "$ref": "#/$defs/formula"
+            },
+            "right": {
+              "$ref": "#/$defs/formula"
+            }
+          },
+          "required": [
+            "node",
+            "op",
+            "left",
+            "right"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "compare"
+            },
+            "op": {
+              "$ref": "#/$defs/compareOp"
+            },
+            "left": {
+              "$ref": "#/$defs/formula"
+            },
+            "right": {
+              "$ref": "#/$defs/formula"
+            }
+          },
+          "required": [
+            "node",
+            "op",
+            "left",
+            "right"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "call"
+            },
+            "function": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            }
+          },
+          "required": [
+            "node",
+            "function",
+            "arguments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "const": "defined"
+            },
+            "formula": {
+              "$ref": "#/$defs/formula"
+            }
+          },
+          "required": [
+            "node",
+            "formula"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "node": {
+              "enum": [
+                "and",
+                "or"
+              ]
+            },
+            "operands": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            }
+          },
+          "required": [
+            "node",
+            "operands"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "compareOp": {
+      "enum": [
+        "<",
+        "<=",
+        ">",
+        ">=",
+        "=",
+        "!="
+      ]
+    },
+    "behavior": {
+      "description": "A behavior statement named by its location, with the preconditions of its enclosing blocks.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "behavior"
+            },
+            "name": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "explanation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            },
+            "statement": {
+              "const": "require"
+            },
+            "condition": {
+              "$ref": "#/$defs/formula"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "origin",
+            "conditions",
+            "explanation",
+            "location",
+            "statement",
+            "condition"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "behavior"
+            },
+            "name": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "explanation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            },
+            "statement": {
+              "const": "imply"
+            },
+            "target": {
+              "$ref": "#/$defs/path"
+            },
+            "value": {
+              "$ref": "#/$defs/formula"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "origin",
+            "conditions",
+            "explanation",
+            "location",
+            "statement",
+            "target",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "behavior"
+            },
+            "name": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "explanation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            },
+            "statement": {
+              "const": "default"
+            },
+            "target": {
+              "$ref": "#/$defs/path"
+            },
+            "value": {
+              "$ref": "#/$defs/formula"
+            },
+            "priority": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "origin",
+            "conditions",
+            "explanation",
+            "location",
+            "statement",
+            "target",
+            "value",
+            "priority"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "behavior"
+            },
+            "name": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "explanation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            },
+            "statement": {
+              "enum": [
+                "minimize",
+                "maximize"
+              ]
+            },
+            "target": {
+              "$ref": "#/$defs/path"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "origin",
+            "conditions",
+            "explanation",
+            "location",
+            "statement",
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "behavior"
+            },
+            "name": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "explanation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            },
+            "statement": {
+              "enum": [
+                "hide",
+                "readonly"
+              ]
+            },
+            "target": {
+              "$ref": "#/$defs/path"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "origin",
+            "conditions",
+            "explanation",
+            "location",
+            "statement",
+            "target",
+            "options"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "behavior"
+            },
+            "name": {
+              "type": "string"
+            },
+            "origin": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "explanation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            },
+            "statement": {
+              "const": "combinations"
+            },
+            "columns": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/formula"
+              }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "allow",
+                      "forbid"
+                    ]
+                  },
+                  "cells": {
+                    "type": "array",
+                    "items": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "op": {
+                            "$ref": "#/$defs/compareOp"
+                          },
+                          "value": {
+                            "$ref": "#/$defs/formula"
+                          }
+                        },
+                        "required": [
+                          "op",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "cells"
+                ],
+                "additionalProperties": false,
+                "description": "A row of a combinations table, a null cell matching anything."
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "origin",
+            "conditions",
+            "explanation",
+            "location",
+            "statement",
+            "columns",
+            "rows"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "test": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "test"
+        },
+        "name": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "enum": [
+                  "set",
+                  "remove",
+                  "reset",
+                  "isFixed",
+                  "isShown",
+                  "isEmpty",
+                  "isAvailable",
+                  "isBlocked",
+                  "isHidden",
+                  "isReadonly"
+                ]
+              },
+              "path": {
+                "$ref": "#/$defs/path"
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/formula"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "step",
+              "path",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "origin",
+        "steps",
+        "location"
+      ],
+      "additionalProperties": false,
+      "description": "A test block named by its location."
+    }
+  }
+}

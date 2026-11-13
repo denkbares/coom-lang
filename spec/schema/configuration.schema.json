@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.coom-lang.org/schema/configuration.schema.json",
+  "title": "COOM configuration",
+  "description": "A configuration as an object per instance, starting with the instance of the product. Each feature that holds a value is a key. A single valued feature maps to its value, a multi valued one to an array indexed by slot with null for an empty slot. Roles are not part of the form.",
+  "$ref": "#/$defs/instance",
+  "$defs": {
+    "instance": {
+      "type": "object",
+      "properties": {
+        "@id": {
+          "type": "string",
+          "description": "The name of the instance."
+        }
+      },
+      "required": [
+        "@id"
+      ],
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/value"
+          },
+          {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "value": {
+      "description": "An instance, an option by its name, a text, a truth value or a number. Numbers are strings where a JSON number would not keep the exact decimal.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/instance"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    }
+  }
+}

@@ -2,12 +2,16 @@
 
 import json
 from decimal import Decimal
+from pathlib import Path
 
+import jsonschema
 import pytest
 
 from coom.compiler import compile_text
 from coom.configuration import Configuration, Instance, Role
 from coom.model import Model
+
+SCHEMA = Path(__file__).resolve().parents[3] / "spec" / "schema"
 
 MODEL = """
 product {
@@ -113,6 +117,16 @@ def test_json_numbers_stay_exact(model: Model) -> None:
     text = json.dumps({"bike": {"weight": 99.99, "stand": "true"}})
     bike = bike_of(Configuration.loads(model, text))
     assert bike["weight"] == Decimal("99.99") and bike["stand"] is True
+
+
+def test_json_conforms_to_the_schema(model: Model) -> None:
+    configuration = _configured(model)
+    bike_of(configuration).set("note", "fast")
+    bike_of(configuration).remove("bags", 0)
+    schema = json.loads((SCHEMA / "configuration.schema.json").read_text())
+    jsonschema.validate(configuration.to_json(), schema)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate({"bike": {"color": "Red"}}, schema)
 
 
 def _configured(model: Model) -> Configuration:

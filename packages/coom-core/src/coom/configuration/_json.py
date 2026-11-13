@@ -12,6 +12,7 @@ from typing import Any
 
 from coom.configuration._configuration import Configuration, Instance, Value
 from coom.model import Feature, Option, Structure
+from coom.model.json import write_number
 
 
 def write(instance: Instance) -> dict[str, Any]:
@@ -37,10 +38,7 @@ def _write_value(value: Value) -> Any:
         case Option():
             return value.name
         case Decimal():
-            if value == value.to_integral_value():
-                return int(value)
-            # a float carries the exact decimal only while its shortest form is that decimal
-            return float(value) if Decimal(repr(float(value))) == value else str(value)
+            return write_number(value)
         case _:
             return value
 

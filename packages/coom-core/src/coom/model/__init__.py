@@ -49,7 +49,7 @@ from coom.model.formulas import (
     PathAccess,
     value_type,
 )
-from coom.model.graph import Item, Model
+from coom.model.graph import Entity, Item, Model
 from coom.model.paths import AttributeStep, FeatureStep, Index, Path, Step
 from coom.model.testing import (
     IsAvailable,
@@ -105,6 +105,7 @@ __all__ = [
     "Default",
     "Direction",
     "Directive",
+    "Entity",
     "Enumeration",
     "Feature",
     "FeatureStep",

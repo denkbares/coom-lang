@@ -11,6 +11,8 @@ from coom.model.traversal import referenced
 from coom.model.types import Attribute, Enumeration, Feature, Option, Structure, Type
 
 type Item = Structure | Feature | Enumeration | Attribute | Option
+type Entity = Item | Behavior | TestCase
+"""A node of the model graph, compared by identity."""
 
 
 @dataclass(eq=False, slots=True, kw_only=True)
@@ -83,6 +85,18 @@ class Model:
         """Yields all features of all structures, root first."""
         for structure in (self.root, *self.structures):
             yield from structure.features
+
+    def entities(self) -> Iterator[Entity]:
+        """Yields all entities in declaration order, each type followed by its members, behaviors and tests last."""
+        for structure in (self.root, *self.structures):
+            yield structure
+            yield from structure.features
+        for enumeration in self.enumerations:
+            yield enumeration
+            yield from enumeration.attributes
+            yield from enumeration.options
+        yield from self.behaviors
+        yield from self.tests
 
     def features_of_type(self, type_: Type) -> tuple[Feature, ...]:
         """Returns the features declared with the given type, for a structure the places it is a part of."""

@@ -24,6 +24,8 @@ dev = [
     "mypy>=1.11",
     "ruff>=0.6",
     "antlr4-tools",
+    "jsonschema>=4.26.0",
+    "types-jsonschema>=4.26.0.20261006",
 ]
 
 [tool.ruff]
