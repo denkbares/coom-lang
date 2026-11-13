@@ -33,6 +33,10 @@ class ParseResult:
     def ok(self) -> bool:
         return not any(diagnostic.severity is Severity.ERROR for diagnostic in self.diagnostics)
 
+    @property
+    def declares_product(self) -> bool:
+        return any(isinstance(node, COOMParser.ProductContext) for node in self.tree.children or ())
+
 
 def parse(text: str, *, source: str | None = None) -> ParseResult:
     """Parses a model and always returns a tree, which after syntax errors holds what error recovery made of it.
