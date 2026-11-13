@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from coom.cli._exit import CommandError
+from coom.cli._render import count
 from coom.compiler import CompileResult, compile
+from coom.diagnostics import Severity
+from coom.model import Model
 from coom.parser import ParseResult, parse_file
 
 PATTERNS = ("*.model", "*.test")
@@ -45,3 +48,11 @@ class Workspace:
     def compile(self, *extra: ParseResult) -> CompileResult:
         """Compiles the sources together with further ones, which are compiled last."""
         return compile(*self.sources, *extra)
+
+    def model(self) -> Model:
+        """Compiles the sources and returns the model, refusing a model with errors."""
+        result = self.compile()
+        errors = sum(1 for diagnostic in result.diagnostics if diagnostic.severity is Severity.ERROR)
+        if errors:
+            raise CommandError(f"the model has {count(errors, 'error')}, run coom lint to see them")
+        return result.model

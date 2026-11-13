@@ -15,14 +15,19 @@ one example each, `coom help COMMAND` the options of a command and `coom help --
 |---|---|
 | `lint` | Compile the model and report its diagnostics, `--snippet TEXT` compiles a fragment against it |
 | `test` | Run the test blocks of the model |
-| `show` | Select items of the model and render them |
+| `show` | Select entities of the model and render them as a tree, a detail view, a list, JSON or COOM text |
 | `diff` | Report the semantic difference of two models |
 | `solve` | Complete a configuration |
 | `explain` | Explain why a value is excluded |
 | `edit rename`, `edit remove` | Rename or remove an item together with its references |
 | `config apply`, `config show`, `config check` | Apply steps to configurations, evaluate and check them |
 
-So far only `lint` is implemented, the other commands exit with status 2.
+So far `lint` and `show` are implemented, the other commands exit with status 2.
+
+A selector names items by their qualified name such as `KidsBike.color`, behaviors and tests by their location such
+as `@KidsBike.test:3` (any line of the statement or block, or `@KidsBike.test` for all of a file) and accepts globs
+such as `'KidsBike.*'`. Every name `show` prints is a selector. `show --format json` writes the model in the form of
+`spec/schema/model.schema.json`.
 
 Diagnostics go to stderr as `file:line:col: severity code: message`, where the code names the family of the message
 (`syntax`, `name`, `type`, `structure`). `--format json` prints a versioned JSON envelope on stdout instead. The exit

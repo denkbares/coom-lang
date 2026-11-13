@@ -6,6 +6,8 @@ from collections.abc import Iterable, Sequence
 from typing import Any
 
 from coom.diagnostics import Diagnostic, Severity
+from coom.model import Span
+from coom.model.json import write_location
 
 JSON_VERSION = 1
 
@@ -26,18 +28,19 @@ def print_json(command: str, items: Sequence[Any] = (), diagnostics: Iterable[Di
 
 
 def diagnostic_json(diagnostic: Diagnostic) -> dict[str, Any]:
-    """Returns a diagnostic as JSON with columns counted from one, as in the text output."""
+    """Returns a diagnostic as JSON with its location as in the model schema."""
     result: dict[str, Any] = {"severity": diagnostic.severity, "code": diagnostic.code, "message": diagnostic.message}
     if diagnostic.span is not None:
-        span = diagnostic.span
-        result["location"] = {
-            "source": span.source,
-            "line": span.line,
-            "column": span.column + 1,
-            "endLine": span.end_line,
-            "endColumn": span.end_column + 1,
-        }
+        result["location"] = write_location(diagnostic.span)
     return result
+
+
+def location(span: Span | None) -> str:
+    """Returns a span as "file:line:col" with columns counted from one, as in diagnostics."""
+    if span is None:
+        return "?"
+    source = f"{span.source}:" if span.source else ""
+    return f"{source}{span.line}:{span.column + 1}"
 
 
 def summary(diagnostics: Sequence[Diagnostic], where: str) -> str:
